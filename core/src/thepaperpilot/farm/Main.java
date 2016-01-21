@@ -4,6 +4,7 @@ import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -64,7 +65,7 @@ public class Main extends Game implements Screen {
 			skin.getFont("font").getData().setScale(.25f);
 
 			// go to the menu screen
-			//setScreen(new PlanetTest());
+			setScreen(new PlanetTest(Color.PINK));
 		}
 	}
 
