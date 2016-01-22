@@ -65,7 +65,7 @@ public class Main extends Game implements Screen {
 			skin.getFont("font").getData().setScale(.25f);
 
 			// go to the menu screen
-			setScreen(new PlanetTest(Color.PINK));
+			setScreen(new PlanetTest(Color.GREEN, Color.RED, Color.BROWN, Color.YELLOW));
 		}
 	}
 

@@ -3,14 +3,13 @@ package thepaperpilot.farm;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
-import com.badlogic.gdx.graphics.glutils.FrameBuffer;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector3;
 
 public class PlanetTest implements Screen{
     private final PerspectiveCamera camera = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -21,71 +20,25 @@ public class PlanetTest implements Screen{
 
     Texture texture;
 
-    static int columns = 4;
-
-    public PlanetTest(Color color) {
+    public PlanetTest(Color ... colors) {
         camera.position.set(10f, 10f, 10f);
         camera.lookAt(0,0,0);
         camera.near = 1f;
         camera.far = 300f;
         camera.update();
 
+        Pixmap pixmap = new Pixmap(32, 32, Pixmap.Format.RGBA8888);
+        generate(pixmap, .5f, 20, colors);
+
         ModelBuilder modelBuilder = new ModelBuilder();
         planet = modelBuilder.createSphere(10, 10, 10, 15, 15,
-                new Material(TextureAttribute.createDiffuse(texture = simplex(256, color))),
+                new Material(TextureAttribute.createDiffuse(texture = new Texture(pixmap))),
                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates);
         instance = new ModelInstance(planet);
+        texture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
 
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f));
         environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
-    }
-
-    //The function that generates the simplex noise texture
-    public static Texture simplex(int size, Color color) {
-        byte[] data = new byte[size * size * columns * 4];
-        int offset = 0;
-        for (int y = 0; y < size; y++) {
-            for (int s = 0; s < columns; s++) {
-                for (int x = 0; x < size; x++) {
-                    //Scale x and y to [-1,1] range
-                    double tx = ((double)x / (size - 1)) * 2 - 1;
-                    double ty = 1 - ((double)y / (size - 1)) * 2;
-
-                    //Determine point on cube in worldspace
-                    double cx = 0, cy = 0, cz = 0;
-                    if      (s == 0) { cx =   1; cy =  tx; cz =  ty; }
-                    else if (s == 1) { cx = -tx; cy =   1; cz =  ty; }
-                    else if (s == 2) { cx = - 1; cy = -tx; cz =  ty; }
-                    else if (s == 3) { cx =  tx; cy = - 1; cz =  ty; }
-                    else if (s == 4) { cx = -ty; cy =  tx; cz =   1; }
-                    else if (s == 5) { cx =  ty; cy =  tx; cz = - 1; }
-
-                    //Determine point on sphere in worldspace
-                    double sx = cx * Math.sqrt(1 - cy*cy/2 - cz*cz/2 + cy*cy*cz*cz/3);
-                    double sy = cy * Math.sqrt(1 - cz*cz/2 - cx*cx/2 + cz*cz*cx*cx/3);
-                    double sz = cz * Math.sqrt(1 - cx*cx/2 - cy*cy/2 + cx*cx*cy*cy/3);
-
-                    //Generate 6 octaves of noise
-                    float gray = (float)(SimplexNoise.fbm(6, sx, sy, sz, 8) / 2 + 0.5);
-
-                    //Set components of the current pixel
-                    data[offset    ] = (byte) (color.r * (byte)(gray * 255));
-                    data[offset + 1] = (byte) (color.g * (byte)(gray * 255));
-                    data[offset + 2] = (byte) (color.b * (byte)(gray * 255));
-                    data[offset + 3] = (byte) (color.a * (byte)(255));
-
-                    //Move to the next pixel
-                    offset += 4;
-                }
-            }
-        }
-
-        Pixmap pixmap = new Pixmap(columns * size, size, Pixmap.Format.RGBA8888);
-        pixmap.getPixels().put(data).position(0);
-
-        Texture texture = new Texture(pixmap, true);
-        texture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
-        return texture;
     }
 
     @Override
@@ -129,5 +82,108 @@ public class PlanetTest implements Screen{
     @Override
     public void hide() {
 
+    }
+
+    private static int oldDensity;
+    private static float[] cellPoint;
+
+    public static void generate(final Pixmap pixmap, float regularity, int density, Color[] colors){
+
+        int width=pixmap.getWidth();
+        int height=pixmap.getHeight();
+
+        int r, g, b;
+        int a=255;
+        Vector3 distVect=new Vector3();
+        float dist;
+        float rand1;
+        float rand2;
+
+        //
+        // Create random cell point, create random cache where necessary
+        //
+        if (oldDensity != density || cellPoint == null){
+            cellPoint=new float[density * density * 2 + 4];
+            for (int y=0; y < density; y++){
+                for (int x=0; x < density; x++){
+                    rand1= MathUtils.random();
+                    rand2=MathUtils.random();
+                    cellPoint[(x + y * density) * 2]=(x + 0.5f + (rand1 - 0.5f) * (1 - regularity)) / density - 1.f / width;
+                    cellPoint[(x + y * density) * 2 + 1]=(y + 0.5f + (rand2 - 0.5f) * (1 - regularity)) / density - 1.f / height;
+                }
+            }
+        }
+
+        oldDensity=density;
+
+        Color[][] cells = new Color[density][density];
+        for (int i = 0; i < cells.length; i++) {
+            for (int j = 0; j < cells[i].length; j++) {
+                cells[i][j] = colors[MathUtils.random(colors.length - 1)];
+            }
+        }
+        for (int y=0; y < height; y++){
+            for (int x=0; x < width; x++){
+
+                float pixelPosX=(float) x / width;
+                float pixelPosY=(float) y / height;
+
+                float minDist=10;
+                float nextMinDist=minDist;
+                int xo=x * density / width;
+                int yo=y * density / height;
+
+                for (int v=-1; v < 2; ++v){
+                    int vo=((yo + density + v) % density) * density;
+                    for (int u=-1; u < 2; ++u){
+                        float cellPosX=cellPoint[((((xo + density + u)) % density) + vo) * 2];
+                        float cellPosY=cellPoint[((((xo + density + u)) % density) + vo) * 2 + 1];
+
+                        if (u == -1 && x * density < width){
+                            cellPosX-=1;
+                        }
+                        if (v == -1 && y * density < height){
+                            cellPosY-=1;
+                        }
+                        if (u == 1 && x * density >= width * (density - 1)){
+                            cellPosX+=1;
+                        }
+                        if (v == 1 && y * density >= height * (density - 1)){
+                            cellPosY+=1;
+                        }
+
+                        dist=distVect.set(pixelPosX, pixelPosY, 0).dst(cellPosX, cellPosY, 0);
+
+                        if (dist < minDist){
+                            nextMinDist=minDist / 2;
+                            minDist=dist;
+                        }
+                        if (dist < nextMinDist){
+                            nextMinDist=dist;
+                        }
+                    }
+                }
+
+                minDist=1 - minDist * density;
+
+                if (minDist < 0){
+                    minDist=0;
+                }
+                if (minDist > 1){
+                    minDist=1;
+                }
+
+                //
+                // Draw pixel
+                //
+                Color color = cells[xo][yo];
+                r=(int) (minDist * color.r * 255);
+                g=(int) (minDist * color.g * 255);
+                b=(int) (minDist * color.b * 255);
+
+                pixmap.drawPixel(x, y, (r << 24) | (g << 16) | (b << 8) | a);
+
+            }
+        }
     }
 }
