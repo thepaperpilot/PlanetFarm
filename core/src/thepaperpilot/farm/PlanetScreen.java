@@ -4,11 +4,14 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Slider;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
@@ -41,6 +44,10 @@ public class PlanetScreen implements Screen{
         table.top();
         fps = new Label("", Main.skin);
         table.add(fps).left().row();
+        stats = new Label("", Main.skin);
+        stats.setWrap(true);
+        stats.setAlignment(Align.top);
+        table.add(stats).expand().fill().row();
         TextButton randomize = new TextButton("Randomize", Main.skin);
         randomize.addListener(new ClickListener() {
             @Override
@@ -48,11 +55,17 @@ public class PlanetScreen implements Screen{
                 planet = Planet.random();
             }
         });
-        stats = new Label("", Main.skin);
-        stats.setWrap(true);
-        stats.setAlignment(Align.top);
-        table.add(stats).expand().fill().row();
         table.add(randomize);
+        final Slider slider = new Slider(32, 1024, 16, false, Main.skin);
+        slider.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                Planet.TEXTURE_QUALITY = (int) slider.getValue();
+                planet = new Planet(planet.prototype);
+            }
+        });
+        slider.setValue(Planet.TEXTURE_QUALITY);
+        table.add(slider).minWidth(10).expandX().fill();
         ui.addActor(table);
 
         stars = new ParticleEffect();

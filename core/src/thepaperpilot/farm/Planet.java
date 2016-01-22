@@ -14,6 +14,8 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 
 public class Planet{
+    public static int TEXTURE_QUALITY = 256;
+
     private final PerspectiveCamera camera = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     private final ModelBatch batch = new ModelBatch();
     private final Model planet;
@@ -21,7 +23,7 @@ public class Planet{
     private final Model clouds;
     private final ModelInstance cloudsInstance;
     private final Environment environment = new Environment();
-    private final PlanetPrototype prototype;
+    public final PlanetPrototype prototype;
 
     public Planet(PlanetPrototype prototype) {
         this.prototype = prototype;
@@ -33,11 +35,11 @@ public class Planet{
 
         ModelBuilder modelBuilder = new ModelBuilder();
         planet = modelBuilder.createSphere(10, 10, 10, 25, 25,
-                new Material(TextureAttribute.createDiffuse(simplex(256, prototype.low, prototype.high, prototype.octave, prototype.frequency, 1, prototype.x1, prototype.y1, prototype.delta))),
+                new Material(TextureAttribute.createDiffuse(simplex(TEXTURE_QUALITY, prototype.low, prototype.high, prototype.octave, prototype.frequency, 1, prototype.x1, prototype.y1, prototype.delta))),
                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates);
         instance = new ModelInstance(planet);
         clouds = modelBuilder.createSphere(10.2f, 10.2f, 10.2f, 25, 25,
-                new Material(TextureAttribute.createDiffuse(simplex(256, prototype.cloud, Color.CLEAR, prototype.cloudOctave, prototype.cloudFrequency, prototype.cloudOpacity, prototype.cloudx1, prototype.cloudy1, prototype.clouddelta))),
+                new Material(TextureAttribute.createDiffuse(simplex(TEXTURE_QUALITY, prototype.cloud, Color.CLEAR, prototype.cloudOctave, prototype.cloudFrequency, prototype.cloudOpacity, prototype.cloudx1, prototype.cloudy1, prototype.clouddelta))),
                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates);
         clouds.materials.first().set(new BlendingAttribute(GL20.GL_BLEND_SRC_ALPHA, GL20.GL_BLEND_SRC_ALPHA));
         cloudsInstance = new ModelInstance(clouds);
