@@ -3,16 +3,13 @@ package thepaperpilot.farm;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
-import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 
-public class PlanetTest implements Screen{
+public class Planet implements Screen{
     private final PerspectiveCamera camera = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     private final ModelBatch batch = new ModelBatch();
     private final Model planet;
@@ -21,10 +18,10 @@ public class PlanetTest implements Screen{
 
     Texture texture;
 
-    static int columns = 4;
+    static int columns = 1;
 
-    public PlanetTest(Color color) {
-        camera.position.set(10f, 10f, 10f);
+    public Planet(PlanetPrototype prototype) {
+        camera.position.set(20f, 0, 0);
         camera.lookAt(0,0,0);
         camera.near = 1f;
         camera.far = 300f;
@@ -32,7 +29,7 @@ public class PlanetTest implements Screen{
 
         ModelBuilder modelBuilder = new ModelBuilder();
         planet = modelBuilder.createSphere(10, 10, 10, 15, 15,
-                new Material(TextureAttribute.createDiffuse(texture = simplex(256, color))),
+                new Material(TextureAttribute.createDiffuse(texture = simplex(128, prototype.low, prototype.high, prototype.octave, prototype.frequency))),
                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates);
         instance = new ModelInstance(planet);
 
@@ -41,7 +38,7 @@ public class PlanetTest implements Screen{
     }
 
     //The function that generates the simplex noise texture
-    public static Texture simplex(int size, Color color) {
+    public static Texture simplex(int size, Color low, Color high, int octave, double frequency) {
         byte[] data = new byte[size * size * columns * 4];
         int offset = 0;
         for (int y = 0; y < size; y++) {
@@ -65,14 +62,17 @@ public class PlanetTest implements Screen{
                     double sy = cy * Math.sqrt(1 - cz*cz/2 - cx*cx/2 + cz*cz*cx*cx/3);
                     double sz = cz * Math.sqrt(1 - cx*cx/2 - cy*cy/2 + cx*cx*cy*cy/3);
 
-                    //Generate 6 octaves of noise
-                    float gray = (float)(SimplexNoise.fbm(6, sx, sy, sz, 8) / 2 + 0.5);
+                    //Generate noise
+                    float gray = (float) (SimplexNoise.fbm(octave, sx, sy, sz, frequency) / 2f + 0.5);
+                    float ogray = (1 - gray);
+                    gray *= 255;
+                    ogray *= 255;
 
                     //Set components of the current pixel
-                    data[offset    ] = (byte) (color.r * (byte)(gray * 255));
-                    data[offset + 1] = (byte) (color.g * (byte)(gray * 255));
-                    data[offset + 2] = (byte) (color.b * (byte)(gray * 255));
-                    data[offset + 3] = (byte) (color.a * (byte)(255));
+                    data[offset    ] = (byte) (low.r * gray + high.r * ogray);
+                    data[offset + 1] = (byte) (low.g * gray + high.g * ogray);
+                    data[offset + 2] = (byte) (low.b * gray + high.b * ogray);
+                    data[offset + 3] = (byte) 255;
 
                     //Move to the next pixel
                     offset += 4;
@@ -129,5 +129,12 @@ public class PlanetTest implements Screen{
     @Override
     public void hide() {
 
+    }
+
+    public static class PlanetPrototype {
+        Color low;
+        Color high;
+        int octave;
+        double frequency;
     }
 }
