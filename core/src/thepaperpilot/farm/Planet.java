@@ -4,16 +4,20 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
+import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.badlogic.gdx.math.MathUtils;
 
 public class Planet implements Screen{
     private final PerspectiveCamera camera = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     private final ModelBatch batch = new ModelBatch();
     private final Model planet;
     private final ModelInstance instance;
+    private final Model clouds;
+    private final ModelInstance cloudsInstance;
     private final Environment environment = new Environment();
 
     Texture texture;
@@ -28,17 +32,22 @@ public class Planet implements Screen{
         camera.update();
 
         ModelBuilder modelBuilder = new ModelBuilder();
-        planet = modelBuilder.createSphere(10, 10, 10, 15, 15,
-                new Material(TextureAttribute.createDiffuse(texture = simplex(128, prototype.low, prototype.high, prototype.octave, prototype.frequency))),
+        planet = modelBuilder.createSphere(10, 10, 10, 25, 25,
+                new Material(TextureAttribute.createDiffuse(texture = simplex(128, prototype.low, prototype.high, prototype.octave, prototype.frequency, 1))),
                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates);
         instance = new ModelInstance(planet);
+        clouds = modelBuilder.createSphere(10.2f, 10.2f, 10.2f, 25, 25,
+                new Material(TextureAttribute.createDiffuse(texture = simplex(128, Color.WHITE, Color.CLEAR, 8, 4, .8f))),
+                VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates);
+        clouds.materials.first().set(new BlendingAttribute(GL20.GL_BLEND_SRC_ALPHA, GL20.GL_BLEND_SRC_ALPHA));
+        cloudsInstance = new ModelInstance(clouds);
 
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f));
         environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
     }
 
     //The function that generates the simplex noise texture
-    public static Texture simplex(int size, Color low, Color high, int octave, double frequency) {
+    public static Texture simplex(int size, Color low, Color high, int octave, double frequency, float modifier) {
         byte[] data = new byte[size * size * columns * 4];
         int offset = 0;
         for (int y = 0; y < size; y++) {
@@ -64,6 +73,7 @@ public class Planet implements Screen{
 
                     //Generate noise
                     float gray = (float) (SimplexNoise.fbm(octave, sx, sy, sz, frequency) / 2f + 0.5);
+                    gray *= modifier;
                     float ogray = (1 - gray);
                     gray *= 255;
                     ogray *= 255;
@@ -72,7 +82,7 @@ public class Planet implements Screen{
                     data[offset    ] = (byte) (low.r * gray + high.r * ogray);
                     data[offset + 1] = (byte) (low.g * gray + high.g * ogray);
                     data[offset + 2] = (byte) (low.b * gray + high.b * ogray);
-                    data[offset + 3] = (byte) 255;
+                    data[offset + 3] = (byte) (low.a * gray + high.a * ogray);
 
                     //Move to the next pixel
                     offset += 4;
@@ -92,9 +102,11 @@ public class Planet implements Screen{
     public void render(float delta) {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
-        instance.transform.rotate(0, 1, 0, 2);
+        instance.transform.rotate(0, 1, 0, 1);
+        cloudsInstance.transform.rotate(0, 1, 0, .5f);
         batch.begin(camera);
         batch.render(instance, environment);
+        batch.render(cloudsInstance, environment);
         batch.end();
     }
 
