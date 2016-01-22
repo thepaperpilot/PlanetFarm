@@ -14,7 +14,7 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 
 public class Planet{
-    public static int TEXTURE_QUALITY = 256;
+    public static int TEXTURE_QUALITY = 64;
 
     private final PerspectiveCamera camera = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     private final ModelBatch batch = new ModelBatch();
