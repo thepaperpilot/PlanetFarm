@@ -78,7 +78,7 @@ public class Planet{
     }
 
     //The function that generates the simplex noise texture
-    public void simplexPlanet(int size, Color low, Color high, int octave, double frequency, double x1, double y1, double delta) {
+    public void simplexPlanet(int size, Color low, Color high, int octave, float frequency, float x1, float y1, float delta) {
         byte[] data = new byte[size * size * 4];
         int offset = 0;
         for (int y = 0; y < size; y++) {
@@ -123,7 +123,7 @@ public class Planet{
     }
 
     //The function that generates the simplex noise texture
-    public void simplexClouds(int size, Color low, Color high, int octave, double frequency, float modifier, double x1, double y1, double delta) {
+    public void simplexClouds(int size, Color low, Color high, int octave, float frequency, float modifier, float x1, float y1, float delta) {
         byte[] data = new byte[size * size * 4];
         int offset = 0;
         for (int y = 0; y < size; y++) {
@@ -236,17 +236,17 @@ public class Planet{
         Color low;
         Color high;
         int octave;
-        double frequency;
-        double x1;
-        double y1;
-        double delta;
+        float frequency;
+        float x1;
+        float y1;
+        float delta;
 
         Color cloud;
         int cloudOctave;
-        double cloudFrequency;
+        float cloudFrequency;
         float cloudOpacity;
-        double cloudx1;
-        double cloudy1;
-        double clouddelta;
+        float cloudx1;
+        float cloudy1;
+        float clouddelta;
     }
 }
