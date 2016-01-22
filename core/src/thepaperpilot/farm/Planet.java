@@ -37,7 +37,7 @@ public class Planet implements Screen{
                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates);
         instance = new ModelInstance(planet);
         clouds = modelBuilder.createSphere(10.2f, 10.2f, 10.2f, 25, 25,
-                new Material(TextureAttribute.createDiffuse(texture = simplex(128, Color.WHITE, Color.CLEAR, 8, 4, .8f))),
+                new Material(TextureAttribute.createDiffuse(texture = simplex(128, prototype.cloud, Color.CLEAR, prototype.cloudOctave, prototype.cloudFrequency, prototype.cloudOpacity))),
                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates);
         clouds.materials.first().set(new BlendingAttribute(GL20.GL_BLEND_SRC_ALPHA, GL20.GL_BLEND_SRC_ALPHA));
         cloudsInstance = new ModelInstance(clouds);
@@ -114,6 +114,7 @@ public class Planet implements Screen{
     public void dispose() {
         batch.dispose();
         planet.dispose();
+        clouds.dispose();
     }
 
     @Override
@@ -148,5 +149,9 @@ public class Planet implements Screen{
         Color high;
         int octave;
         double frequency;
+        Color cloud;
+        int cloudOctave;
+        double cloudFrequency;
+        float cloudOpacity;
     }
 }

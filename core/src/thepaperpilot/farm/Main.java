@@ -72,6 +72,10 @@ public class Main extends Game implements Screen {
 			prototype.octave = 8;//6
 			// Higher makes smaller high spots
 			prototype.frequency = 2;//8
+			prototype.cloud = Color.WHITE;
+			prototype.cloudOctave = 8;
+			prototype.cloudFrequency = 4;
+			prototype.cloudOpacity = .8f;
 			setScreen(new Planet(prototype));
 		}
 	}
