@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Slider;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
@@ -21,6 +22,7 @@ public class PlanetScreen implements Screen{
     Stage ui;
     Label fps;
     Label stats;
+    Label generating;
     ParticleEffect stars;
 
     public PlanetScreen() {
@@ -76,6 +78,12 @@ public class PlanetScreen implements Screen{
         }
 
         ui.addActor(new ParticleEffectActor(stars, ui.getWidth() / 2, ui.getHeight() / 2));
+
+        generating = new Label("Generating", Main.skin, "large");
+        generating.setFillParent(true);
+        generating.setAlignment(Align.center);
+        generating.setTouchable(Touchable.disabled);
+        ui.addActor(generating);
     }
 
     @Override
@@ -89,7 +97,8 @@ public class PlanetScreen implements Screen{
         stats.setText(planet.toString());
         ui.act();
         ui.draw();
-        planet.render(delta); // TODO make this render in a more reliable position/scale
+        // TODO make this render in a more reliable position/scale
+        generating.setVisible(!planet.render(delta));
     }
 
     @Override
