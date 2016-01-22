@@ -89,8 +89,6 @@ public class Planet{
     }
 
     public void render(float delta) {
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-
         instance.transform.rotate(0, 1, 0, delta * 10);
         cloudsInstance.transform.rotate(0, 1, 0, delta * 5);
 

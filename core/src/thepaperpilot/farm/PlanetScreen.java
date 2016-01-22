@@ -3,6 +3,7 @@ package thepaperpilot.farm;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -17,6 +18,7 @@ public class PlanetScreen implements Screen{
     Stage ui;
     Label fps;
     Label stats;
+    ParticleEffect stars;
 
     public PlanetScreen() {
         Planet.PlanetPrototype prototype = new Planet.PlanetPrototype();
@@ -52,6 +54,15 @@ public class PlanetScreen implements Screen{
         table.add(stats).expand().fill().row();
         table.add(randomize);
         ui.addActor(table);
+
+        stars = new ParticleEffect();
+        stars.load(Gdx.files.internal("stars.p"), Gdx.files.internal(""));
+        stars.scaleEffect(.2f);
+        for (int i = 0; i < 100; i++) {
+            stars.update(.1f);
+        }
+
+        ui.addActor(new ParticleEffectActor(stars, ui.getWidth() / 2, ui.getHeight() / 2));
     }
 
     @Override
@@ -61,11 +72,11 @@ public class PlanetScreen implements Screen{
 
     @Override
     public void render(float delta) {
-        planet.render(delta); // TODO make this render in a more reliable position/scale
         fps.setText("fps: " + Gdx.graphics.getFramesPerSecond());
         stats.setText(planet.toString());
         ui.act();
         ui.draw();
+        planet.render(delta); // TODO make this render in a more reliable position/scale
     }
 
     @Override
