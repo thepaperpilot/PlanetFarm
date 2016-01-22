@@ -3,8 +3,12 @@ package thepaperpilot.farm;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 
@@ -12,6 +16,7 @@ public class PlanetScreen implements Screen{
     Planet planet;
     Stage ui;
     Label fps;
+    Label stats;
 
     public PlanetScreen() {
         Planet.PlanetPrototype prototype = new Planet.PlanetPrototype();
@@ -29,9 +34,24 @@ public class PlanetScreen implements Screen{
         prototype.clouddelta = 2;
         planet = new Planet(prototype);
         ui = new Stage(new StretchViewport(320, 180));
+        Table table = new Table(Main.skin);
+        table.setFillParent(true);
+        table.top();
         fps = new Label("", Main.skin);
-        fps.setPosition(2, ui.getHeight() - 4, Align.topLeft);
-        ui.addActor(fps);
+        table.add(fps).left().row();
+        TextButton randomize = new TextButton("Randomize", Main.skin);
+        randomize.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                planet = Planet.random();
+            }
+        });
+        stats = new Label("", Main.skin);
+        stats.setWrap(true);
+        stats.setAlignment(Align.top);
+        table.add(stats).expand().fill().row();
+        table.add(randomize);
+        ui.addActor(table);
     }
 
     @Override
@@ -43,6 +63,7 @@ public class PlanetScreen implements Screen{
     public void render(float delta) {
         planet.render(delta); // TODO make this render in a more reliable position/scale
         fps.setText("fps: " + Gdx.graphics.getFramesPerSecond());
+        stats.setText(planet.toString());
         ui.act();
         ui.draw();
     }

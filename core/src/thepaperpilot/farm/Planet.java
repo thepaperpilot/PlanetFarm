@@ -21,8 +21,10 @@ public class Planet{
     private final Model clouds;
     private final ModelInstance cloudsInstance;
     private final Environment environment = new Environment();
+    private final PlanetPrototype prototype;
 
     public Planet(PlanetPrototype prototype) {
+        this.prototype = prototype;
         camera.position.set(15, -4, 0);
         camera.lookAt(0,0,0);
         camera.near = 1f;
@@ -110,6 +112,45 @@ public class Planet{
         camera.update();
     }
 
+    @Override
+    public String toString() {
+        return "PlanetPrototype{" +
+                "low=" + prototype.low +
+                ", high=" + prototype.high +
+                ", octave=" + prototype.octave +
+                ", frequency=" + prototype.frequency +
+                ", x1=" + prototype.x1 +
+                ", y1=" + prototype.y1 +
+                ", delta=" + prototype.delta +
+                ", cloud=" + prototype.cloud +
+                ", cloudOctave=" + prototype.cloudOctave +
+                ", cloudFrequency=" + prototype.cloudFrequency +
+                ", cloudOpacity=" + prototype.cloudOpacity +
+                ", cloudx1=" + prototype.cloudx1 +
+                ", cloudy1=" + prototype.cloudy1 +
+                ", clouddelta=" + prototype.clouddelta +
+                '}';
+    }
+
+    public static Planet random() {
+        PlanetPrototype prototype = new PlanetPrototype();
+        prototype.low = new Color(MathUtils.random(), MathUtils.random(), MathUtils.random(), 1);
+        prototype.high = new Color(MathUtils.random(), MathUtils.random(), MathUtils.random(), 1);
+        prototype.octave = 8;
+        prototype.frequency = MathUtils.random(6f) + 1;
+        prototype.x1 = MathUtils.random(100) - 50;
+        prototype.y1 = MathUtils.random(100) - 50;
+        prototype.delta = MathUtils.random(6f) + 1;
+        prototype.cloud = new Color(MathUtils.random(), MathUtils.random(), MathUtils.random(), 1);
+        prototype.cloudOctave = 8;
+        prototype.cloudFrequency = MathUtils.random(6) + 1;
+        prototype.cloudOpacity = MathUtils.random() / 2f + .5f;
+        prototype.cloudx1 = MathUtils.random(100) - 50;
+        prototype.cloudy1 = MathUtils.random(100) - 50;
+        prototype.clouddelta = MathUtils.random(6f) + 1;
+        return new Planet(prototype);
+    }
+
     public static class PlanetPrototype {
         Color low;
         Color high;
@@ -118,6 +159,7 @@ public class Planet{
         double x1;
         double y1;
         double delta;
+
         Color cloud;
         int cloudOctave;
         double cloudFrequency;
