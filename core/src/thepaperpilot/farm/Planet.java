@@ -10,8 +10,10 @@ import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 
-public class Planet implements Screen{
+public class Planet{
     private final PerspectiveCamera camera = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     private final ModelBatch batch = new ModelBatch();
     private final Model planet;
@@ -98,50 +100,28 @@ public class Planet implements Screen{
         return texture;
     }
 
-    @Override
-    public void render(float delta) {
+    public void render() {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
         instance.transform.rotate(0, 1, 0, 1);
         cloudsInstance.transform.rotate(0, 1, 0, .5f);
+
         batch.begin(camera);
         batch.render(instance, environment);
         batch.render(cloudsInstance, environment);
         batch.end();
     }
 
-    @Override
     public void dispose() {
         batch.dispose();
         planet.dispose();
         clouds.dispose();
     }
 
-    @Override
-    public void show() {
-
-    }
-
-    @Override
     public void resize(int width, int height) {
         camera.viewportWidth = width;
         camera.viewportHeight = height;
         camera.update();
-    }
-
-    @Override
-    public void pause() {
-
-    }
-
-    @Override
-    public void resume() {
-
-    }
-
-    @Override
-    public void hide() {
-
     }
 
     public static class PlanetPrototype {

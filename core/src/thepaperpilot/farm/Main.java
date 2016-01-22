@@ -65,18 +65,7 @@ public class Main extends Game implements Screen {
 			skin.getFont("font").getData().setScale(.25f);
 
 			// go to the menu screen
-			Planet.PlanetPrototype prototype = new Planet.PlanetPrototype();
-			prototype.low = Color.BLUE;
-			prototype.high = new Color(0, .5f, 0, 1);
-			// Higher seems to make it run slower for higher quality
-			prototype.octave = 8;//6
-			// Higher makes smaller high spots
-			prototype.frequency = 2;//8
-			prototype.cloud = Color.WHITE;
-			prototype.cloudOctave = 8;
-			prototype.cloudFrequency = 4;
-			prototype.cloudOpacity = .8f;
-			setScreen(new Planet(prototype));
+			setScreen(new PlanetScreen());
 		}
 	}
 
