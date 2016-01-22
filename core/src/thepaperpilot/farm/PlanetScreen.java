@@ -44,6 +44,7 @@ public class PlanetScreen implements Screen{
         randomize.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                planet.terminate();
                 planet = Planet.random();
                 save(Gdx.app.getPreferences("thepaperpilot.farm.planet1"), planet.prototype);
             }

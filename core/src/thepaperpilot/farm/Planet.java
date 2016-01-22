@@ -26,6 +26,11 @@ public class Planet{
     Texture cloudTexture;
     private Environment environment = new Environment();
     public final PlanetPrototype prototype;
+    private volatile boolean running = true;
+
+    public void terminate() {
+        running = false;
+    }
 
     public Planet(final PlanetPrototype prototype) {
         this.prototype = prototype;
@@ -83,6 +88,7 @@ public class Planet{
         int offset = 0;
         for (int y = 0; y < size; y++) {
             for (int x = 0; x < size; x++) {
+                if(!running) return;
                 //Scale x and y to [-1,1] range
                 double tx = ((double)x / (size - 1)) * 2 - 1;
                 double ty = 1 - ((double)y / (size - 1)) * 2;
