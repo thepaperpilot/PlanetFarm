@@ -18,13 +18,15 @@ public class PlanetScreen implements Screen{
         prototype.low = Color.BLUE;
         prototype.high = new Color(0, .5f, 0, 1);
         // Higher seems to make it run slower for higher quality
-        prototype.octave = 8;//6
+        prototype.octave = 8;
         // Higher makes smaller high spots
-        prototype.frequency = 2;//8
+        prototype.frequency = 2;
+        prototype.delta = 2;
         prototype.cloud = Color.WHITE;
         prototype.cloudOctave = 8;
-        prototype.cloudFrequency = 4;
-        prototype.cloudOpacity = .8f;
+        prototype.cloudFrequency = 8;
+        prototype.cloudOpacity = .6f;
+        prototype.clouddelta = 2;
         planet = new Planet(prototype);
         ui = new Stage(new StretchViewport(320, 180));
         fps = new Label("", Main.skin);
@@ -39,7 +41,7 @@ public class PlanetScreen implements Screen{
 
     @Override
     public void render(float delta) {
-        planet.render(); // TODO make this render in a more reliable position/scale
+        planet.render(delta); // TODO make this render in a more reliable position/scale
         fps.setText("fps: " + Gdx.graphics.getFramesPerSecond());
         ui.act();
         ui.draw();
