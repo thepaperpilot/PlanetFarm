@@ -65,6 +65,7 @@ public class PlanetScreen implements Screen{
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 Planet.TEXTURE_QUALITY = (int) slider.getValue();
+                planet.terminate();
                 planet = new Planet(planet.prototype);
             }
         });
