@@ -31,6 +31,7 @@ public class Planet{
 
     public void terminate() {
         running = false;
+        dispose();
     }
 
     public Planet(final PlanetPrototype prototype) {
