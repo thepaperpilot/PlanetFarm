@@ -84,40 +84,7 @@ public class Planet{
 
     //The function that generates the simplex noise texture
     public void simplexPlanet(int size, Color low, Color high, int octave, float frequency, float x1, float y1, float delta) {
-        byte[] data = new byte[size * size * 4];
-        int offset = 0;
-        for (int y = 0; y < size; y++) {
-            for (int x = 0; x < size; x++) {
-                if(!running) return;
-                //Scale x and y to [-1,1] range
-                double tx = ((double)x / (size - 1)) * 2 - 1;
-                double ty = 1 - ((double)y / (size - 1)) * 2;
-
-                //Determine point on sphere in worldspace
-                double sx = x1 + MathUtils.cos((float) (2 * tx * Math.PI)) * delta / (2 * Math.PI);
-                double sy = y1 + MathUtils.cos((float) (2 * ty * Math.PI)) * delta / (2 * Math.PI);
-                double sz = x1 + MathUtils.sin((float) (2 * tx * Math.PI)) * delta / (2 * Math.PI);
-                double sw = y1 + MathUtils.sin((float) (2 * ty * Math.PI)) * delta / (2 * Math.PI);
-
-                //Generate noise
-                float gray = (float) (SimplexNoise.fbm(octave, sx, sy, sz, sw, frequency) / 2f + 0.5);
-                float ogray = (1 - gray);
-                gray *= 255;
-                ogray *= 255;
-
-                //Set components of the current pixel
-                data[offset    ] = (byte) (low.r * gray + high.r * ogray);
-                data[offset + 1] = (byte) (low.g * gray + high.g * ogray);
-                data[offset + 2] = (byte) (low.b * gray + high.b * ogray);
-                data[offset + 3] = (byte) (low.a * gray + high.a * ogray);
-
-                //Move to the next pixel
-                offset += 4;
-            }
-        }
-
-        final Pixmap pixmap = new Pixmap(size, size, Pixmap.Format.RGBA8888);
-        pixmap.getPixels().put(data).position(0);
+        final Pixmap pixmap = generatePixmap(size, low, high, octave, frequency, 1, x1, y1, delta);
 
         Gdx.app.postRunnable(new Runnable() {
             @Override
@@ -130,6 +97,18 @@ public class Planet{
 
     //The function that generates the simplex noise texture
     public void simplexClouds(int size, Color low, Color high, int octave, float frequency, float modifier, float x1, float y1, float delta) {
+        final Pixmap pixmap = generatePixmap(size, low, high, octave, frequency, modifier, x1, y1, delta);
+
+        Gdx.app.postRunnable(new Runnable() {
+            @Override
+            public void run() {
+                cloudTexture = new Texture(pixmap, true);
+                cloudTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+            }
+        });
+    }
+
+    private Pixmap generatePixmap(int size, Color low, Color high, int octave, float frequency, float modifier, float x1, float y1, float delta) {
         byte[] data = new byte[size * size * 4];
         int offset = 0;
         for (int y = 0; y < size; y++) {
@@ -164,14 +143,7 @@ public class Planet{
 
         final Pixmap pixmap = new Pixmap(size, size, Pixmap.Format.RGBA8888);
         pixmap.getPixels().put(data).position(0);
-
-        Gdx.app.postRunnable(new Runnable() {
-            @Override
-            public void run() {
-                cloudTexture = new Texture(pixmap, true);
-                cloudTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
-            }
-        });
+        return pixmap;
     }
 
     public boolean render(float delta) {
