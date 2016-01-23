@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.MathUtils;
 
 public class Planet{
@@ -25,6 +26,8 @@ public class Planet{
     private Environment environment = new Environment();
     public final PlanetPrototype prototype;
     private volatile boolean running = true;
+    boolean animating = true;
+    float time = 0;
 
     public void terminate() {
         running = false;
@@ -33,22 +36,25 @@ public class Planet{
     public Planet(final PlanetPrototype prototype) {
         this.prototype = prototype;
 
+        camera.position.set(15, -4, 0);
+        camera.lookAt(0,0,0);
+        camera.near = 1f;
+        camera.far = 300f;
+        camera.update();
+
+        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.2f, 0.2f, 0.2f, 1f));
+        environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
+
+        Gdx.app.postRunnable(new Runnable() {
+            @Override
+            public void run() {
+                batch = new ModelBatch();
+            }
+        });
+
         new Thread(new Runnable() {
             @Override
             public void run() {
-                camera.position.set(15, -4, 0);
-                camera.lookAt(0,0,0);
-                camera.near = 1f;
-                camera.far = 300f;
-                camera.update();
-
-                Gdx.app.postRunnable(new Runnable() {
-                    @Override
-                    public void run() {
-                        batch = new ModelBatch();
-                    }
-                });
-
                 simplexPlanet(TEXTURE_QUALITY, prototype.low, prototype.high, prototype.octave, prototype.frequency, prototype.x1, prototype.y1, prototype.delta);
                 simplexClouds(TEXTURE_QUALITY, prototype.cloud, Color.CLEAR, prototype.cloudOctave, prototype.cloudFrequency, prototype.cloudOpacity, prototype.cloudx1, prototype.cloudy1, prototype.clouddelta);
 
@@ -73,9 +79,6 @@ public class Planet{
                         cloudsInstance = new ModelInstance(clouds);
                     }
                 });
-
-                environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.2f, 0.2f, 0.2f, 1f));
-                environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
             }
         }).start();
     }
@@ -151,6 +154,15 @@ public class Planet{
 
     public boolean render(float delta) {
         if (batch == null || instance == null || environment == null) return false;
+
+        if (animating) {
+            time += delta;
+            float scale = Interpolation.swingOut.apply(time * 2);
+            instance.transform.setToScaling(scale, scale, scale);
+            cloudsInstance.transform.setToScaling(scale, scale, scale);
+            if (time >= .5f) animating = false;
+        }
+
         instance.transform.rotate(0, 1, 0, delta * 10);
         cloudsInstance.transform.rotate(0, 1, 0, delta * 5);
 
