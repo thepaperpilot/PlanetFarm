@@ -13,7 +13,7 @@ import com.badlogic.gdx.math.MathUtils;
 
 public class Planet{
     public static int TEXTURE_QUALITY = 64;
-    private static float MUTATION = .95f;
+    private static float MUTATION = .2f;
 
     private final PerspectiveCamera camera = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     private ModelBatch batch;
@@ -247,6 +247,7 @@ public class Planet{
                 prototype.cloud.b * (1 - MUTATION) + mutation.cloud.b * MUTATION, 1);
         result.cloudOctave = (int) (prototype.cloudOctave * (1 - MUTATION) + mutation.cloudOctave * MUTATION);
         result.cloudFrequency = prototype.cloudFrequency * (1 - MUTATION) + mutation.cloudFrequency * MUTATION;
+        result.cloudOpacity = prototype.cloudOpacity * (1 - MUTATION) + mutation.cloudOpacity * MUTATION;
         result.cloudx1 = prototype.cloudx1 * (1 - MUTATION) + mutation.cloudx1 * MUTATION;
         result.cloudy1 = prototype.cloudy1 * (1 - MUTATION) + mutation.cloudy1 * MUTATION;
         result.clouddelta = prototype.clouddelta * (1 - MUTATION) + mutation.clouddelta * MUTATION;
@@ -275,6 +276,7 @@ public class Planet{
                 parent1.cloud.b * (1 - MUTATION) / 2f + parent2.cloud.b * (1 - MUTATION) / 2f + mutation.cloud.b * MUTATION, 1);
         result.cloudOctave = (int) (parent1.cloudOctave * (1 - MUTATION) / 2f + parent2.cloudOctave * (1 - MUTATION) / 2f + mutation.cloudOctave * MUTATION);
         result.cloudFrequency = parent1.cloudFrequency * (1 - MUTATION) / 2f + parent2.cloudFrequency * (1 - MUTATION) / 2f + mutation.cloudFrequency * MUTATION;
+        result.cloudOpacity = parent1.cloudOpacity * (1 - MUTATION) / 2f + parent2.cloudOpacity * (1 - MUTATION) / 2f + mutation.cloudOpacity * MUTATION;
         result.cloudx1 = parent1.cloudx1 * (1 - MUTATION) / 2f + parent2.cloudx1 * (1 - MUTATION) / 2f + mutation.cloudx1 * MUTATION;
         result.cloudy1 = parent1.cloudy1 * (1 - MUTATION) / 2f + parent2.cloudy1 * (1 - MUTATION) / 2f + mutation.cloudy1 * MUTATION;
         result.clouddelta = parent1.clouddelta * (1 - MUTATION) / 2f + parent2.clouddelta * (1 - MUTATION) / 2f + mutation.clouddelta * MUTATION;
