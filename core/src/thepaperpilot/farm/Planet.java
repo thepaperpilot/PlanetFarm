@@ -1,7 +1,6 @@
 package thepaperpilot.farm;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
@@ -10,11 +9,10 @@ import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.scenes.scene2d.Actor;
 
 public class Planet{
     public static int TEXTURE_QUALITY = 64;
+    private static float MUTATION = .95f;
 
     private final PerspectiveCamera camera = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     private ModelBatch batch;
@@ -86,6 +84,8 @@ public class Planet{
     public void simplexPlanet(int size, Color low, Color high, int octave, float frequency, float x1, float y1, float delta) {
         final Pixmap pixmap = generatePixmap(size, low, high, octave, frequency, 1, x1, y1, delta);
 
+        if (pixmap == null) return;
+
         Gdx.app.postRunnable(new Runnable() {
             @Override
             public void run() {
@@ -98,6 +98,8 @@ public class Planet{
     //The function that generates the simplex noise texture
     public void simplexClouds(int size, Color low, Color high, int octave, float frequency, float modifier, float x1, float y1, float delta) {
         final Pixmap pixmap = generatePixmap(size, low, high, octave, frequency, modifier, x1, y1, delta);
+
+        if (pixmap == null) return;
 
         Gdx.app.postRunnable(new Runnable() {
             @Override
@@ -113,6 +115,7 @@ public class Planet{
         int offset = 0;
         for (int y = 0; y < size; y++) {
             for (int x = 0; x < size; x++) {
+                if (!running) return null;
                 //Scale x and y to [-1,1] range
                 double tx = ((double)x / (size - 1)) * 2 - 1;
                 double ty = 1 - ((double)y / (size - 1)) * 2;
@@ -191,7 +194,7 @@ public class Planet{
                 '}';
     }
 
-    public static Planet random() {
+    public static PlanetPrototype random() {
         PlanetPrototype prototype = new PlanetPrototype();
         prototype.low = new Color(MathUtils.random(), MathUtils.random(), MathUtils.random(), 1);
         prototype.high = new Color(MathUtils.random(), MathUtils.random(), MathUtils.random(), 1);
@@ -207,7 +210,63 @@ public class Planet{
         prototype.cloudx1 = MathUtils.random(100) - 50;
         prototype.cloudy1 = MathUtils.random(100) - 50;
         prototype.clouddelta = MathUtils.random(6f) + 1;
-        return new Planet(prototype);
+        return prototype;
+    }
+
+    public PlanetPrototype mutate() {
+        PlanetPrototype result = new PlanetPrototype();
+        PlanetPrototype mutation = Planet.random();
+        result.low = new Color(
+                prototype.low.r * (1 - MUTATION) + mutation.low.r * MUTATION,
+                prototype.low.g * (1 - MUTATION) + mutation.low.g * MUTATION,
+                prototype.low.b * (1 - MUTATION) + mutation.low.b * MUTATION, 1);
+        result.high = new Color(
+                prototype.high.r * (1 - MUTATION) + mutation.high.r * MUTATION,
+                prototype.high.g * (1 - MUTATION) + mutation.high.g * MUTATION,
+                prototype.high.b * (1 - MUTATION) + mutation.high.b * MUTATION, 1);
+        result.octave = (int) (prototype.octave * (1 - MUTATION) + mutation.octave * MUTATION);
+        result.frequency = prototype.frequency * (1 - MUTATION) + mutation.frequency * MUTATION;
+        result.x1 = prototype.x1 * (1 - MUTATION) + mutation.x1 * MUTATION;
+        result.y1 = prototype.y1 * (1 - MUTATION) + mutation.y1 * MUTATION;
+        result.delta = prototype.delta * (1 - MUTATION) + mutation.delta * MUTATION;
+        result.cloud = new Color(
+                prototype.cloud.r * (1 - MUTATION) + mutation.cloud.r * MUTATION,
+                prototype.cloud.g * (1 - MUTATION) + mutation.cloud.g * MUTATION,
+                prototype.cloud.b * (1 - MUTATION) + mutation.cloud.b * MUTATION, 1);
+        result.cloudOctave = (int) (prototype.cloudOctave * (1 - MUTATION) + mutation.cloudOctave * MUTATION);
+        result.cloudFrequency = prototype.cloudFrequency * (1 - MUTATION) + mutation.cloudFrequency * MUTATION;
+        result.cloudx1 = prototype.cloudx1 * (1 - MUTATION) + mutation.cloudx1 * MUTATION;
+        result.cloudy1 = prototype.cloudy1 * (1 - MUTATION) + mutation.cloudy1 * MUTATION;
+        result.clouddelta = prototype.clouddelta * (1 - MUTATION) + mutation.clouddelta * MUTATION;
+        return result;
+    }
+
+    public static PlanetPrototype breed(PlanetPrototype parent1, PlanetPrototype parent2) {
+        PlanetPrototype result = new PlanetPrototype();
+        PlanetPrototype mutation = Planet.random();
+        result.low = new Color(
+                parent1.low.r * (1 - MUTATION) / 2f + parent2.low.r * (1 - MUTATION) / 2f + mutation.low.r * MUTATION,
+                parent1.low.g * (1 - MUTATION) / 2f + parent2.low.g * (1 - MUTATION) / 2f + mutation.low.g * MUTATION,
+                parent1.low.b * (1 - MUTATION) / 2f + parent2.low.b * (1 - MUTATION) / 2f + mutation.low.b * MUTATION, 1);
+        result.high = new Color(
+                parent1.high.r * (1 - MUTATION) / 2f + parent2.high.r * (1 - MUTATION) / 2f + mutation.high.r * MUTATION,
+                parent1.high.g * (1 - MUTATION) / 2f + parent2.high.g * (1 - MUTATION) / 2f + mutation.high.g * MUTATION,
+                parent1.high.b * (1 - MUTATION) / 2f + parent2.high.b * (1 - MUTATION) / 2f + mutation.high.b * MUTATION, 1);
+        result.octave = (int) (parent1.octave * (1 - MUTATION) / 2f + parent2.octave * (1 - MUTATION) / 2f + mutation.octave * MUTATION);
+        result.frequency = parent1.frequency * (1 - MUTATION) / 2f + parent2.frequency * (1 - MUTATION) / 2f + mutation.frequency * MUTATION;
+        result.x1 = parent1.x1 * (1 - MUTATION) / 2f + parent2.x1 * (1 - MUTATION) / 2f + mutation.x1 * MUTATION;
+        result.y1 = parent1.y1 * (1 - MUTATION) / 2f + parent2.y1 * (1 - MUTATION) / 2f + mutation.y1 * MUTATION;
+        result.delta = parent1.delta * (1 - MUTATION) / 2f + parent2.delta * (1 - MUTATION) / 2f + mutation.delta * MUTATION;
+        result.cloud = new Color(
+                parent1.cloud.r * (1 - MUTATION) / 2f + parent2.cloud.r * (1 - MUTATION) / 2f + mutation.cloud.r * MUTATION,
+                parent1.cloud.g * (1 - MUTATION) / 2f + parent2.cloud.g * (1 - MUTATION) / 2f + mutation.cloud.g * MUTATION,
+                parent1.cloud.b * (1 - MUTATION) / 2f + parent2.cloud.b * (1 - MUTATION) / 2f + mutation.cloud.b * MUTATION, 1);
+        result.cloudOctave = (int) (parent1.cloudOctave * (1 - MUTATION) / 2f + parent2.cloudOctave * (1 - MUTATION) / 2f + mutation.cloudOctave * MUTATION);
+        result.cloudFrequency = parent1.cloudFrequency * (1 - MUTATION) / 2f + parent2.cloudFrequency * (1 - MUTATION) / 2f + mutation.cloudFrequency * MUTATION;
+        result.cloudx1 = parent1.cloudx1 * (1 - MUTATION) / 2f + parent2.cloudx1 * (1 - MUTATION) / 2f + mutation.cloudx1 * MUTATION;
+        result.cloudy1 = parent1.cloudy1 * (1 - MUTATION) / 2f + parent2.cloudy1 * (1 - MUTATION) / 2f + mutation.cloudy1 * MUTATION;
+        result.clouddelta = parent1.clouddelta * (1 - MUTATION) / 2f + parent2.clouddelta * (1 - MUTATION) / 2f + mutation.clouddelta * MUTATION;
+        return result;
     }
 
     public static class PlanetPrototype {

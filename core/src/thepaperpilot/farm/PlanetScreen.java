@@ -40,12 +40,21 @@ public class PlanetScreen implements Screen{
         stats.setWrap(true);
         stats.setAlignment(Align.top);
         table.add(stats).expand().fill().row();
+        TextButton mutate = new TextButton("Mutate", Main.skin);
+        mutate.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                planet = new Planet(planet.mutate());
+                save(Gdx.app.getPreferences("thepaperpilot.farm.planet1"), planet.prototype);
+            }
+        });
+        table.add(mutate).row();
         TextButton randomize = new TextButton("Randomize", Main.skin);
         randomize.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 planet.terminate();
-                planet = Planet.random();
+                planet = new Planet(Planet.random());
                 save(Gdx.app.getPreferences("thepaperpilot.farm.planet1"), planet.prototype);
             }
         });
