@@ -176,9 +176,9 @@ public class Planet{
     }
 
     public void dispose() {
-        batch.dispose();
-        planet.dispose();
-        clouds.dispose();
+        if (batch != null) batch.dispose();
+        if (planet != null) planet.dispose();
+        if (clouds != null) clouds.dispose();
     }
 
     public void resize(int width, int height) {
