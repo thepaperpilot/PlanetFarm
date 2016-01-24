@@ -70,7 +70,7 @@ public class Planet{
                     @Override
                     public void run() {
                         ModelBuilder modelBuilder = new ModelBuilder();
-                        planet = modelBuilder.createSphere(10, 10, 10, (int) Math.sqrt(TEXTURE_QUALITY), (int) Math.sqrt(TEXTURE_QUALITY),
+                        planet = modelBuilder.createSphere(10, 10, 10, 2 * (int) Math.sqrt(TEXTURE_QUALITY), 2 * (int) Math.sqrt(TEXTURE_QUALITY),
                                 new Material(TextureAttribute.createDiffuse(planetTexture)),
                                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates);
                         instance = new ModelInstance(planet);

@@ -60,7 +60,7 @@ public class PlanetScreen implements Screen{
             }
         });
         table.add(randomize);
-        final Slider slider = new Slider(16, 1024, 16, false, Main.skin);
+        final Slider slider = new Slider(16, 512, 16, false, Main.skin);
         slider.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
