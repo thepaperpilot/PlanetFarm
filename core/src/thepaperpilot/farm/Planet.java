@@ -14,6 +14,7 @@ import com.badlogic.gdx.math.MathUtils;
 public class Planet{
     public static int TEXTURE_QUALITY = 64;
     private static float MUTATION = .2f;
+    private static int OCTAVES = 4;
 
     private final PerspectiveCamera camera = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     private ModelBatch batch;
@@ -56,8 +57,9 @@ public class Planet{
         new Thread(new Runnable() {
             @Override
             public void run() {
-                simplexPlanet(TEXTURE_QUALITY, prototype.low, prototype.high, prototype.octave, prototype.frequency, prototype.x1, prototype.y1, prototype.delta);
-                simplexClouds(TEXTURE_QUALITY, prototype.cloud, Color.CLEAR, prototype.cloudOctave, prototype.cloudFrequency, prototype.cloudOpacity, prototype.cloudx1, prototype.cloudy1, prototype.clouddelta);
+                long time = System.currentTimeMillis();
+                simplexPlanet(TEXTURE_QUALITY, prototype.low, prototype.high, prototype.frequency, prototype.x1, prototype.y1, prototype.delta);
+                simplexClouds(TEXTURE_QUALITY, prototype.cloud, Color.CLEAR, prototype.cloudFrequency, prototype.cloudOpacity, prototype.cloudx1, prototype.cloudy1, prototype.clouddelta);
 
                 while (planetTexture == null || cloudTexture == null)
                     try {
@@ -85,8 +87,8 @@ public class Planet{
     }
 
     //The function that generates the simplex noise texture
-    public void simplexPlanet(int size, Color low, Color high, int octave, float frequency, float x1, float y1, float delta) {
-        final Pixmap pixmap = generatePixmap(size, low, high, octave, frequency, 1, x1, y1, delta);
+    public void simplexPlanet(int size, Color low, Color high, float frequency, float x1, float y1, float delta) {
+        final Pixmap pixmap = generatePixmap(size, low, high, OCTAVES, frequency, 1, x1, y1, delta);
 
         if (pixmap == null) return;
 
@@ -100,8 +102,8 @@ public class Planet{
     }
 
     //The function that generates the simplex noise texture
-    public void simplexClouds(int size, Color low, Color high, int octave, float frequency, float modifier, float x1, float y1, float delta) {
-        final Pixmap pixmap = generatePixmap(size, low, high, octave, frequency, modifier, x1, y1, delta);
+    public void simplexClouds(int size, Color low, Color high, float frequency, float modifier, float x1, float y1, float delta) {
+        final Pixmap pixmap = generatePixmap(size, low, high, OCTAVES, frequency, modifier, x1, y1, delta);
 
         if (pixmap == null) return;
 
@@ -192,13 +194,11 @@ public class Planet{
         return "PlanetPrototype{" +
                 "low=" + prototype.low +
                 ", high=" + prototype.high +
-                ", octave=" + prototype.octave +
                 ", frequency=" + prototype.frequency +
                 ", x1=" + prototype.x1 +
                 ", y1=" + prototype.y1 +
                 ", delta=" + prototype.delta +
                 ", cloud=" + prototype.cloud +
-                ", cloudOctave=" + prototype.cloudOctave +
                 ", cloudFrequency=" + prototype.cloudFrequency +
                 ", cloudOpacity=" + prototype.cloudOpacity +
                 ", cloudx1=" + prototype.cloudx1 +
@@ -211,13 +211,11 @@ public class Planet{
         PlanetPrototype prototype = new PlanetPrototype();
         prototype.low = new Color(MathUtils.random(), MathUtils.random(), MathUtils.random(), 1);
         prototype.high = new Color(MathUtils.random(), MathUtils.random(), MathUtils.random(), 1);
-        prototype.octave = 8;
         prototype.frequency = MathUtils.random(6f) + 1;
         prototype.x1 = MathUtils.random(100) - 50;
         prototype.y1 = MathUtils.random(100) - 50;
         prototype.delta = MathUtils.random(6f) + 1;
         prototype.cloud = new Color(MathUtils.random(), MathUtils.random(), MathUtils.random(), 1);
-        prototype.cloudOctave = 8;
         prototype.cloudFrequency = MathUtils.random(6) + 1;
         prototype.cloudOpacity = MathUtils.random() / 2f + .5f;
         prototype.cloudx1 = MathUtils.random(100) - 50;
@@ -237,7 +235,6 @@ public class Planet{
                 prototype.high.r * (1 - MUTATION) + mutation.high.r * MUTATION,
                 prototype.high.g * (1 - MUTATION) + mutation.high.g * MUTATION,
                 prototype.high.b * (1 - MUTATION) + mutation.high.b * MUTATION, 1);
-        result.octave = (int) (prototype.octave * (1 - MUTATION) + mutation.octave * MUTATION);
         result.frequency = prototype.frequency * (1 - MUTATION) + mutation.frequency * MUTATION;
         result.x1 = prototype.x1 * (1 - MUTATION) + mutation.x1 * MUTATION;
         result.y1 = prototype.y1 * (1 - MUTATION) + mutation.y1 * MUTATION;
@@ -246,7 +243,6 @@ public class Planet{
                 prototype.cloud.r * (1 - MUTATION) + mutation.cloud.r * MUTATION,
                 prototype.cloud.g * (1 - MUTATION) + mutation.cloud.g * MUTATION,
                 prototype.cloud.b * (1 - MUTATION) + mutation.cloud.b * MUTATION, 1);
-        result.cloudOctave = (int) (prototype.cloudOctave * (1 - MUTATION) + mutation.cloudOctave * MUTATION);
         result.cloudFrequency = prototype.cloudFrequency * (1 - MUTATION) + mutation.cloudFrequency * MUTATION;
         result.cloudOpacity = prototype.cloudOpacity * (1 - MUTATION) + mutation.cloudOpacity * MUTATION;
         result.cloudx1 = prototype.cloudx1 * (1 - MUTATION) + mutation.cloudx1 * MUTATION;
@@ -266,7 +262,6 @@ public class Planet{
                 parent1.high.r * (1 - MUTATION) / 2f + parent2.high.r * (1 - MUTATION) / 2f + mutation.high.r * MUTATION,
                 parent1.high.g * (1 - MUTATION) / 2f + parent2.high.g * (1 - MUTATION) / 2f + mutation.high.g * MUTATION,
                 parent1.high.b * (1 - MUTATION) / 2f + parent2.high.b * (1 - MUTATION) / 2f + mutation.high.b * MUTATION, 1);
-        result.octave = (int) (parent1.octave * (1 - MUTATION) / 2f + parent2.octave * (1 - MUTATION) / 2f + mutation.octave * MUTATION);
         result.frequency = parent1.frequency * (1 - MUTATION) / 2f + parent2.frequency * (1 - MUTATION) / 2f + mutation.frequency * MUTATION;
         result.x1 = parent1.x1 * (1 - MUTATION) / 2f + parent2.x1 * (1 - MUTATION) / 2f + mutation.x1 * MUTATION;
         result.y1 = parent1.y1 * (1 - MUTATION) / 2f + parent2.y1 * (1 - MUTATION) / 2f + mutation.y1 * MUTATION;
@@ -275,7 +270,6 @@ public class Planet{
                 parent1.cloud.r * (1 - MUTATION) / 2f + parent2.cloud.r * (1 - MUTATION) / 2f + mutation.cloud.r * MUTATION,
                 parent1.cloud.g * (1 - MUTATION) / 2f + parent2.cloud.g * (1 - MUTATION) / 2f + mutation.cloud.g * MUTATION,
                 parent1.cloud.b * (1 - MUTATION) / 2f + parent2.cloud.b * (1 - MUTATION) / 2f + mutation.cloud.b * MUTATION, 1);
-        result.cloudOctave = (int) (parent1.cloudOctave * (1 - MUTATION) / 2f + parent2.cloudOctave * (1 - MUTATION) / 2f + mutation.cloudOctave * MUTATION);
         result.cloudFrequency = parent1.cloudFrequency * (1 - MUTATION) / 2f + parent2.cloudFrequency * (1 - MUTATION) / 2f + mutation.cloudFrequency * MUTATION;
         result.cloudOpacity = parent1.cloudOpacity * (1 - MUTATION) / 2f + parent2.cloudOpacity * (1 - MUTATION) / 2f + mutation.cloudOpacity * MUTATION;
         result.cloudx1 = parent1.cloudx1 * (1 - MUTATION) / 2f + parent2.cloudx1 * (1 - MUTATION) / 2f + mutation.cloudx1 * MUTATION;
@@ -287,14 +281,12 @@ public class Planet{
     public static class PlanetPrototype {
         Color low;
         Color high;
-        int octave;
         float frequency;
         float x1;
         float y1;
         float delta;
 
         Color cloud;
-        int cloudOctave;
         float cloudFrequency;
         float cloudOpacity;
         float cloudx1;
