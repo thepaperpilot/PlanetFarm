@@ -57,7 +57,6 @@ public class Planet{
         new Thread(new Runnable() {
             @Override
             public void run() {
-                long time = System.currentTimeMillis();
                 simplexPlanet(TEXTURE_QUALITY, prototype.low, prototype.high, prototype.frequency, prototype.x1, prototype.y1, prototype.delta);
                 simplexClouds(TEXTURE_QUALITY, prototype.cloud, Color.CLEAR, prototype.cloudFrequency, prototype.cloudOpacity, prototype.cloudx1, prototype.cloudy1, prototype.clouddelta);
 
@@ -71,7 +70,7 @@ public class Planet{
                     @Override
                     public void run() {
                         ModelBuilder modelBuilder = new ModelBuilder();
-                        planet = modelBuilder.createSphere(10, 10, 10, 25, 25,
+                        planet = modelBuilder.createSphere(10, 10, 10, (int) Math.sqrt(TEXTURE_QUALITY), (int) Math.sqrt(TEXTURE_QUALITY),
                                 new Material(TextureAttribute.createDiffuse(planetTexture)),
                                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates);
                         instance = new ModelInstance(planet);
