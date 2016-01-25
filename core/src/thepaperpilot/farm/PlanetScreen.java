@@ -61,13 +61,14 @@ public class PlanetScreen implements Screen{
             }
         });
         slider.setValue(Planet.TEXTURE_QUALITY);
-        table.add(slider).colspan(2).minWidth(10).expandX().fill().row();
+        table.add(slider).colspan(4).minWidth(10).expandX().fill().row();
         fps = new Label("", Main.skin);
         table.add(fps).left().top().expand().row();
         TextButton mutate = new TextButton("Mutate", Main.skin);
         mutate.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                if (planets.size() < 1) return;
                 Planet oldPlanet = planets.get(planets.size() - 1);
                 oldPlanet.terminate();
                 planets.remove(oldPlanet);
@@ -89,6 +90,34 @@ public class PlanetScreen implements Screen{
             }
         });
         table.add(randomize).expandX().fill();
+        TextButton breed = new TextButton("Breed", Main.skin);
+        breed.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (planets.size() < 2) return;
+                Planet newPlanet = new Planet(Planet.breed(planets.get(planets.size() - 2).prototype, planets.get(planets.size() - 1).prototype));
+                planets.add(newPlanet);
+                save(Gdx.app.getPreferences("thepaperpilot.farm.planet" + (planets.indexOf(newPlanet) + 1)), newPlanet.prototype);
+                updatePositions();
+            }
+        });
+        table.add(breed).expandX().fill();
+        TextButton kill = new TextButton("Kill", Main.skin);
+        kill.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (planets.size() < 1) return;
+                planets.remove(0);
+                for (int i = 0; i < planets.size(); i++) {
+                    save(Gdx.app.getPreferences("thepaperpilot.farm.planet" + (i + 1)), planets.get(i).prototype);
+                }
+                Preferences del = Gdx.app.getPreferences("thepaperpilot.farm.planet" + (planets.size() + 1));
+                del.putBoolean("planet", false);
+                del.flush();
+                updatePositions();
+            }
+        });
+        table.add(kill).expandX().fill();
         ui.addActor(table);
         stars = new ParticleEffect();
         stars.load(Gdx.files.internal("stars.p"), Gdx.files.internal(""));
