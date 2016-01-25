@@ -2,6 +2,7 @@ package thepaperpilot.farm;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
@@ -10,14 +11,19 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.utils.Align;
 
 public class Planet{
     public static int TEXTURE_QUALITY = 64;
+    public static int PLANET_SIZE = 10;
     private static float MUTATION = .2f;
     private static int OCTAVES = 4;
 
-    private final PerspectiveCamera camera = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-    private ModelBatch batch;
+    public static ModelBatch modelBatch;
+    public static SpriteBatch spriteBatch;
     private Model planet;
     private ModelInstance instance;
     private Model clouds;
@@ -29,6 +35,9 @@ public class Planet{
     private volatile boolean running = true;
     boolean animating = true;
     float time = 0;
+    Label generating;
+    float x;
+    float y;
 
     public void terminate() {
         running = false;
@@ -38,21 +47,8 @@ public class Planet{
     public Planet(final PlanetPrototype prototype) {
         this.prototype = prototype;
 
-        camera.position.set(15, -4, 0);
-        camera.lookAt(0,0,0);
-        camera.near = 1f;
-        camera.far = 300f;
-        camera.update();
-
-        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.2f, 0.2f, 0.2f, 1f));
-        environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
-
-        Gdx.app.postRunnable(new Runnable() {
-            @Override
-            public void run() {
-                batch = new ModelBatch();
-            }
-        });
+        generating = new Label("...", Main.skin);
+        generating.setTouchable(Touchable.disabled);
 
         new Thread(new Runnable() {
             @Override
@@ -70,15 +66,18 @@ public class Planet{
                     @Override
                     public void run() {
                         ModelBuilder modelBuilder = new ModelBuilder();
-                        planet = modelBuilder.createSphere(10, 10, 10, 2 * (int) Math.sqrt(TEXTURE_QUALITY), 2 * (int) Math.sqrt(TEXTURE_QUALITY),
+                        planet = modelBuilder.createSphere(PLANET_SIZE, PLANET_SIZE, PLANET_SIZE, 2 * (int) Math.sqrt(TEXTURE_QUALITY), 2 * (int) Math.sqrt(TEXTURE_QUALITY),
                                 new Material(TextureAttribute.createDiffuse(planetTexture)),
                                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates);
                         instance = new ModelInstance(planet);
-                        clouds = modelBuilder.createSphere(10.2f, 10.2f, 10.2f, 25, 25,
+                        clouds = modelBuilder.createSphere(PLANET_SIZE * 1.025f, PLANET_SIZE * 1.025f, PLANET_SIZE * 1.025f, 25, 25,
                                 new Material(TextureAttribute.createDiffuse(cloudTexture)),
                                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates);
                         clouds.materials.first().set(new BlendingAttribute(GL20.GL_BLEND_SRC_ALPHA, GL20.GL_BLEND_SRC_ALPHA));
                         cloudsInstance = new ModelInstance(clouds);
+
+                        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.2f, 0.2f, 0.2f, 1f));
+                        environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
                     }
                 });
             }
@@ -155,37 +154,33 @@ public class Planet{
     }
 
     public boolean render(float delta) {
-        if (batch == null || instance == null || environment == null) return false;
+        generating.draw(spriteBatch, 1);
+
+        if (modelBatch == null || instance == null || cloudsInstance == null || planetTexture == null || cloudTexture == null || environment == null) return false;
 
         if (animating) {
             time += delta;
-            float scale = Interpolation.swingOut.apply(time * 2);
-            instance.transform.setToScaling(scale, scale, scale);
-            cloudsInstance.transform.setToScaling(scale, scale, scale);
-            if (time >= .5f) animating = false;
+            float scale = Interpolation.swingOut.apply(-100, 0, time * 2);
+            instance.transform.setTranslation(x, y, scale);
+            cloudsInstance.transform.setTranslation(x, y, scale);
+            if (time >= .5f) {
+                animating = false;
+                instance.transform.setTranslation(x, y, 0);
+                cloudsInstance.transform.setTranslation(x, y, 0);
+            }
         }
 
         instance.transform.rotate(0, 1, 0, delta * 10);
         cloudsInstance.transform.rotate(0, 1, 0, delta * 5);
 
-        batch.begin(camera);
-        batch.render(instance, environment);
-        batch.render(cloudsInstance, environment);
-        batch.end();
-
+        modelBatch.render(instance, environment);
+        modelBatch.render(cloudsInstance, environment);
         return true;
     }
 
     public void dispose() {
-        if (batch != null) batch.dispose();
         if (planet != null) planet.dispose();
         if (clouds != null) clouds.dispose();
-    }
-
-    public void resize(int width, int height) {
-        camera.viewportWidth = width;
-        camera.viewportHeight = height;
-        camera.update();
     }
 
     @Override
@@ -275,6 +270,14 @@ public class Planet{
         result.cloudy1 = parent1.cloudy1 * (1 - MUTATION) / 2f + parent2.cloudy1 * (1 - MUTATION) / 2f + mutation.cloudy1 * MUTATION;
         result.clouddelta = parent1.clouddelta * (1 - MUTATION) / 2f + parent2.clouddelta * (1 - MUTATION) / 2f + mutation.clouddelta * MUTATION;
         return result;
+    }
+
+    public void position(int x, int y) {
+        if (instance != null) instance.transform.setTranslation(x, y, 0);
+        if (cloudsInstance != null) cloudsInstance.transform.setTranslation(x, y, 0);
+        generating.setPosition(x, y, Align.center);
+        this.x = x;
+        this.y = y;
     }
 
     public static class PlanetPrototype {

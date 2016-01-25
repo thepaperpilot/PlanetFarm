@@ -4,89 +4,113 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Slider;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 
+import java.util.ArrayList;
+
 public class PlanetScreen implements Screen{
-    Planet planet;
+    private static final float COLUMNS = 4;
+
+    ArrayList<Planet> planets = new ArrayList<Planet>();
     Stage ui;
     Label fps;
-    Label stats;
-    Label generating;
     ParticleEffect stars;
+    private final PerspectiveCamera camera = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
     public PlanetScreen() {
         Preferences prefs = Gdx.app.getPreferences("thepaperpilot.farm.planet1");
-        planet = new Planet(getPlanet(prefs));
+        planets.add(new Planet(getPlanet(prefs)));
+        save(prefs, planets.get(0).prototype);
+        int j = 2;
+        while (true) {
+            prefs = Gdx.app.getPreferences("thepaperpilot.farm.planet" + j);
+            if (prefs.getBoolean("planet"))
+                planets.add(new Planet(getPlanet(prefs)));
+            else break;
+            j++;
+        }
 
         ui = new Stage(new StretchViewport(320, 180));
         Table table = new Table(Main.skin);
         table.setFillParent(true);
         table.top();
-        fps = new Label("", Main.skin);
-        table.add(fps).left().row();
-        stats = new Label("", Main.skin);
-        stats.setWrap(true);
-        stats.setAlignment(Align.top);
-        table.add(stats).expand().fill().row();
-        TextButton mutate = new TextButton("Mutate", Main.skin);
-        mutate.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                planet.terminate();
-                planet = new Planet(planet.mutate());
-                save(Gdx.app.getPreferences("thepaperpilot.farm.planet1"), planet.prototype);
-            }
-        });
-        table.add(mutate).row();
-        TextButton randomize = new TextButton("Randomize", Main.skin);
-        randomize.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                planet.terminate();
-                planet = new Planet(Planet.random());
-                save(Gdx.app.getPreferences("thepaperpilot.farm.planet1"), planet.prototype);
-            }
-        });
-        table.add(randomize);
-        final Slider slider = new Slider(16, 512, 16, false, Main.skin);
+        final Slider slider = new Slider(32, 512, 16, false, Main.skin);
         slider.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 Planet.TEXTURE_QUALITY = (int) slider.getValue();
-                planet.terminate();
-                planet = new Planet(planet.prototype);
+                for (int i = 0; i < planets.size(); i++) {
+                    Planet planet = planets.get(i);
+                    planet.terminate();
+                    planets.remove(i);
+                    planets.add(i, new Planet(planet.prototype));
+                }
+                updatePositions();
             }
         });
         slider.setValue(Planet.TEXTURE_QUALITY);
-        table.add(slider).minWidth(10).expandX().fill();
+        table.add(slider).colspan(2).minWidth(10).expandX().fill().row();
+        fps = new Label("", Main.skin);
+        table.add(fps).left().top().expand().row();
+        TextButton mutate = new TextButton("Mutate", Main.skin);
+        mutate.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                Planet oldPlanet = planets.get(planets.size() - 1);
+                oldPlanet.terminate();
+                planets.remove(oldPlanet);
+                Planet newPlanet = new Planet(oldPlanet.mutate());
+                planets.add(newPlanet);
+                save(Gdx.app.getPreferences("thepaperpilot.farm.planet" + (planets.indexOf(newPlanet) + 1)), newPlanet.prototype);
+                updatePositions();
+            }
+        });
+        table.add(mutate).expandX().fill();
+        TextButton randomize = new TextButton("Randomize", Main.skin);
+        randomize.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                Planet newPlanet = new Planet(Planet.random());
+                planets.add(newPlanet);
+                save(Gdx.app.getPreferences("thepaperpilot.farm.planet" + (planets.indexOf(newPlanet) + 1)), newPlanet.prototype);
+                updatePositions();
+            }
+        });
+        table.add(randomize).expandX().fill();
         ui.addActor(table);
-
         stars = new ParticleEffect();
         stars.load(Gdx.files.internal("stars.p"), Gdx.files.internal(""));
-        stars.scaleEffect(.2f);
         for (int i = 0; i < 100; i++) {
             stars.update(.1f);
         }
 
-        ui.addActor(new ParticleEffectActor(stars, ui.getWidth() / 2, ui.getHeight() / 2));
+        camera.near = 1f;
+        camera.far = 300f;
+        updatePositions();
+    }
 
-        generating = new Label("Generating", Main.skin, "large");
-        generating.setFillParent(true);
-        generating.setAlignment(Align.center);
-        generating.setTouchable(Touchable.disabled);
-        ui.addActor(generating);
+    private void updatePositions() {
+        int rows = MathUtils.ceil(planets.size() / COLUMNS);
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < COLUMNS && i * COLUMNS + j < planets.size(); j++) {
+                planets.get((int) (i * COLUMNS + j)).position(2 * Planet.PLANET_SIZE * j, -2 * Planet.PLANET_SIZE * i);
+            }
+        }
+        camera.position.set(Planet.PLANET_SIZE * (COLUMNS - 1), -Planet.PLANET_SIZE * (rows - 1), 8 * Planet.PLANET_SIZE);
+        camera.lookAt(Planet.PLANET_SIZE * (COLUMNS - 1), -Planet.PLANET_SIZE * (rows - 1), 0);
+        camera.update();
     }
 
     private static void save(Preferences prefs, Planet.PlanetPrototype prototype) {
@@ -108,6 +132,7 @@ public class PlanetScreen implements Screen{
         prefs.putFloat("cloudx1", prototype.cloudx1);
         prefs.putFloat("cloudy1", prototype.cloudy1);
         prefs.putFloat("cloudDelta", prototype.clouddelta);
+        prefs.putBoolean("planet", true);
         prefs.flush();
     }
 
@@ -136,17 +161,25 @@ public class PlanetScreen implements Screen{
     @Override
     public void render(float delta) {
         fps.setText("fps: " + Gdx.graphics.getFramesPerSecond());
-        stats.setText(planet.toString());
+        Planet.spriteBatch.setProjectionMatrix(camera.combined);
+        Planet.spriteBatch.begin();
+        Planet.modelBatch.begin(camera);
+        stars.draw(Planet.spriteBatch, delta);
+        for (Planet planet : planets) {
+            planet.render(delta);
+        }
+        Planet.spriteBatch.end();
+        Planet.modelBatch.end();
         ui.act();
         ui.draw();
-        // TODO make this render in a more reliable position/scale
-        generating.setVisible(!planet.render(delta));
     }
 
     @Override
     public void resize(int width, int height) {
-        planet.resize(width, height);
         ui.getViewport().update(width, height);
+        camera.viewportWidth = width;
+        camera.viewportHeight = height;
+        camera.update();
     }
 
     @Override
@@ -166,6 +199,8 @@ public class PlanetScreen implements Screen{
 
     @Override
     public void dispose() {
-        planet.dispose();
+        for (Planet planet : planets) {
+            planet.dispose();
+        }
     }
 }

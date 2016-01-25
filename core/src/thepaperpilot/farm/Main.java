@@ -4,8 +4,9 @@ import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.AssetManager;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -64,6 +65,9 @@ public class Main extends Game implements Screen {
 			skin.getFont("large").getData().setScale(.5f);
 			skin.getFont("font").getData().setScale(.25f);
 
+			Planet.modelBatch = new ModelBatch();
+			Planet.spriteBatch = new SpriteBatch();
+
 			// go to the menu screen
 			setScreen(new PlanetScreen());
 		}
@@ -107,6 +111,8 @@ public class Main extends Game implements Screen {
 		// also clean up our shit
 		manager.dispose();
 		if (skin != null) skin.dispose();
+		if (Planet.modelBatch != null) Planet.modelBatch.dispose();
+		if (Planet.spriteBatch != null) Planet.spriteBatch.dispose();
 	}
 
 	@Override

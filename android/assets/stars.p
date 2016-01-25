@@ -38,8 +38,8 @@ shape: square
 - Spawn Width -
 lowMin: 0.0
 lowMax: 0.0
-highMin: 3840.0
-highMax: 3840.0
+highMin: 1920.0
+highMax: 1920.0
 relative: false
 scalingCount: 1
 scaling0: 1.0
@@ -58,8 +58,8 @@ timeline0: 0.0
 - Scale -
 lowMin: 0.0
 lowMax: 0.0
-highMin: 1.0
-highMax: 4.0
+highMin: 0.2
+highMax: 0.8
 relative: false
 scalingCount: 1
 scaling0: 1.0
@@ -155,8 +155,8 @@ shape: square
 - Spawn Width -
 lowMin: 0.0
 lowMax: 0.0
-highMin: 3840.0
-highMax: 3840.0
+highMin: 1920.0
+highMax: 1920.0
 relative: false
 scalingCount: 1
 scaling0: 1.0
@@ -175,8 +175,8 @@ timeline0: 0.0
 - Scale -
 lowMin: 0.0
 lowMax: 0.0
-highMin: 1.0
-highMax: 4.0
+highMin: 0.2
+highMax: 0.8
 relative: false
 scalingCount: 1
 scaling0: 1.0
@@ -272,8 +272,8 @@ shape: square
 - Spawn Width -
 lowMin: 0.0
 lowMax: 0.0
-highMin: 1280.0
-highMax: 1280.0
+highMin: 1920.0
+highMax: 1920.0
 relative: false
 scalingCount: 1
 scaling0: 1.0
@@ -282,8 +282,8 @@ timeline0: 0.0
 - Spawn Height -
 lowMin: 0.0
 lowMax: 0.0
-highMin: 720.0
-highMax: 720.0
+highMin: 2160.0
+highMax: 2160.0
 relative: false
 scalingCount: 1
 scaling0: 1.0
@@ -292,8 +292,8 @@ timeline0: 0.0
 - Scale -
 lowMin: 0.0
 lowMax: 0.0
-highMin: 1.0
-highMax: 4.0
+highMin: 0.2
+highMax: 0.8
 relative: false
 scalingCount: 1
 scaling0: 1.0
