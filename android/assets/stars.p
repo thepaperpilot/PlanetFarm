@@ -6,12 +6,12 @@ lowMin: 1000.0
 lowMax: 1000.0
 - Count -
 min: 1000
-max: 10000
+max: 100000000
 - Emission -
 lowMin: 0.0
 lowMax: 0.0
 highMin: 1000.0
-highMax: 1000.0
+highMax: 100000.0
 relative: false
 scalingCount: 1
 scaling0: 1.0
@@ -58,8 +58,8 @@ timeline0: 0.0
 - Scale -
 lowMin: 0.0
 lowMax: 0.0
-highMin: 0.2
-highMax: 0.8
+highMin: 0.1
+highMax: 0.4
 relative: false
 scalingCount: 1
 scaling0: 1.0
