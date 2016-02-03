@@ -13,7 +13,6 @@ import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Slider;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
@@ -28,7 +27,6 @@ public class PlanetScreen extends InputAdapter implements Screen{
     private static final float COLUMNS = 4;
     private final TextButton look;
     private final TextButton mutate;
-    private final TextButton randomize;
     private final TextButton breed;
     private final TextButton kill;
 
@@ -81,14 +79,16 @@ public class PlanetScreen extends InputAdapter implements Screen{
         look.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                if (look.isDisabled()) return;
                 // TODO look at planets
             }
         });
-        table.add(look).expandX().fill();
+        table.add(look).expandX().fill().uniform();
         mutate = new TextButton("Mutate", Main.skin);
         mutate.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                if (mutate.isDisabled()) return;
                 Planet newPlanet = new Planet(selected.get(0).mutate());
                 planets.add(newPlanet);
                 save(Gdx.app.getPreferences("thepaperpilot.farm.planet" + (planets.indexOf(newPlanet) + 1)), newPlanet.prototype);
@@ -96,32 +96,35 @@ public class PlanetScreen extends InputAdapter implements Screen{
             }
         });
         table.add(mutate).expandX().fill();
-        randomize = new TextButton("Randomize", Main.skin);
+        final TextButton randomize = new TextButton("Randomize", Main.skin);
         randomize.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                if (randomize.isDisabled()) return;
                 Planet newPlanet = new Planet(Planet.random());
                 planets.add(newPlanet);
                 save(Gdx.app.getPreferences("thepaperpilot.farm.planet" + (planets.indexOf(newPlanet) + 1)), newPlanet.prototype);
                 updatePositions();
             }
         });
-        table.add(randomize).expandX().fill();
+        table.add(randomize).expandX().fill().uniform();
         breed = new TextButton("Breed", Main.skin);
         breed.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                if (breed.isDisabled()) return;
                 Planet newPlanet = new Planet(Planet.breed(selected.get(0).prototype, selected.get(1).prototype));
                 planets.add(newPlanet);
                 save(Gdx.app.getPreferences("thepaperpilot.farm.planet" + (planets.indexOf(newPlanet) + 1)), newPlanet.prototype);
                 updatePositions();
             }
         });
-        table.add(breed).expandX().fill();
+        table.add(breed).expandX().fill().uniform();
         kill = new TextButton("Kill", Main.skin);
         kill.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                if (kill.isDisabled()) return;
                 int toRemove = selected.size();
                 for (Planet planet : selected) {
                     planets.remove(planet);
@@ -138,7 +141,7 @@ public class PlanetScreen extends InputAdapter implements Screen{
                 updatePositions();
             }
         });
-        table.add(kill).expandX().fill();
+        table.add(kill).expandX().fill().uniform();
         updateButtonTouchables();
         ui.addActor(table);
         stars = new ParticleEffect();
@@ -156,15 +159,10 @@ public class PlanetScreen extends InputAdapter implements Screen{
     }
 
     private void updateButtonTouchables() {
-        if (selected.size() == 1) {
-            look.setTouchable(Touchable.enabled);
-            mutate.setTouchable(Touchable.enabled);
-        } else {
-            look.setTouchable(Touchable.disabled);
-            mutate.setTouchable(Touchable.disabled);
-        }
-        breed.setTouchable(selected.size() == 2 ? Touchable.enabled : Touchable.disabled);
-        kill.setTouchable(selected.size() < 1 ? Touchable.disabled : Touchable.enabled);
+        look.setDisabled(selected.size() != 1);
+        mutate.setDisabled(selected.size() != 1);
+        breed.setDisabled(selected.size() != 2);
+        kill.setDisabled(selected.size() < 0);
     }
 
     private void updatePositions() {

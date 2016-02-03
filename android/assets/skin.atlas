@@ -50,6 +50,14 @@ default-round-down
   orig: 9, 9
   offset: 0, 0
   index: -1
+default-round-disabled
+  rotate: false
+  xy: 12, 16
+  size: 9, 9
+  split: 4, 3, 3, 3
+  orig: 9, 9
+  offset: 0, 0
+  index: -1
 check-on
   rotate: false
   xy: 21, 9
