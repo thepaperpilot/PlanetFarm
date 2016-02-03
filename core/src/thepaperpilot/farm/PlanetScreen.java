@@ -13,6 +13,7 @@ import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Slider;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
@@ -25,6 +26,11 @@ import java.util.ArrayList;
 
 public class PlanetScreen extends InputAdapter implements Screen{
     private static final float COLUMNS = 4;
+    private final TextButton look;
+    private final TextButton mutate;
+    private final TextButton randomize;
+    private final TextButton breed;
+    private final TextButton kill;
 
     ArrayList<Planet> planets = new ArrayList<Planet>();
     ArrayList<Planet> selected = new ArrayList<Planet>();
@@ -68,25 +74,29 @@ public class PlanetScreen extends InputAdapter implements Screen{
             }
         });
         slider.setValue(Planet.TEXTURE_QUALITY);
-        table.add(slider).colspan(4).minWidth(10).expandX().fill().row();
+        table.add(slider).colspan(5).minWidth(10).expandX().fill().row();
         fps = new Label("", Main.skin);
         table.add(fps).left().top().expand().row();
-        TextButton mutate = new TextButton("Mutate", Main.skin);
+        look = new TextButton("Look", Main.skin);
+        look.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                // TODO look at planets
+            }
+        });
+        table.add(look).expandX().fill();
+        mutate = new TextButton("Mutate", Main.skin);
         mutate.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                if (planets.size() < 1) return;
-                Planet oldPlanet = planets.get(planets.size() - 1);
-                oldPlanet.terminate();
-                planets.remove(oldPlanet);
-                Planet newPlanet = new Planet(oldPlanet.mutate());
+                Planet newPlanet = new Planet(selected.get(0).mutate());
                 planets.add(newPlanet);
                 save(Gdx.app.getPreferences("thepaperpilot.farm.planet" + (planets.indexOf(newPlanet) + 1)), newPlanet.prototype);
                 updatePositions();
             }
         });
         table.add(mutate).expandX().fill();
-        TextButton randomize = new TextButton("Randomize", Main.skin);
+        randomize = new TextButton("Randomize", Main.skin);
         randomize.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -97,34 +107,39 @@ public class PlanetScreen extends InputAdapter implements Screen{
             }
         });
         table.add(randomize).expandX().fill();
-        TextButton breed = new TextButton("Breed", Main.skin);
+        breed = new TextButton("Breed", Main.skin);
         breed.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                if (planets.size() < 2) return;
-                Planet newPlanet = new Planet(Planet.breed(planets.get(planets.size() - 2).prototype, planets.get(planets.size() - 1).prototype));
+                Planet newPlanet = new Planet(Planet.breed(selected.get(0).prototype, selected.get(1).prototype));
                 planets.add(newPlanet);
                 save(Gdx.app.getPreferences("thepaperpilot.farm.planet" + (planets.indexOf(newPlanet) + 1)), newPlanet.prototype);
                 updatePositions();
             }
         });
         table.add(breed).expandX().fill();
-        TextButton kill = new TextButton("Kill", Main.skin);
+        kill = new TextButton("Kill", Main.skin);
         kill.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                if (planets.size() < 1) return;
-                planets.remove(0);
+                int toRemove = selected.size();
+                for (Planet planet : selected) {
+                    planets.remove(planet);
+                }
+                selected.clear();
                 for (int i = 0; i < planets.size(); i++) {
                     save(Gdx.app.getPreferences("thepaperpilot.farm.planet" + (i + 1)), planets.get(i).prototype);
                 }
-                Preferences del = Gdx.app.getPreferences("thepaperpilot.farm.planet" + (planets.size() + 1));
-                del.putBoolean("planet", false);
-                del.flush();
+                for (int i = 0; i < toRemove; i++) {
+                    Preferences del = Gdx.app.getPreferences("thepaperpilot.farm.planet" + (planets.size() + 1 - i));
+                    del.putBoolean("planet", false);
+                    del.flush();
+                }
                 updatePositions();
             }
         });
         table.add(kill).expandX().fill();
+        updateButtonTouchables();
         ui.addActor(table);
         stars = new ParticleEffect();
         stars.load(Gdx.files.internal("stars.p"), Gdx.files.internal(""));
@@ -138,6 +153,18 @@ public class PlanetScreen extends InputAdapter implements Screen{
 
         selectionMaterial = new Material();
         selectionMaterial.set(ColorAttribute.createDiffuse(Color.ORANGE));
+    }
+
+    private void updateButtonTouchables() {
+        if (selected.size() == 1) {
+            look.setTouchable(Touchable.enabled);
+            mutate.setTouchable(Touchable.enabled);
+        } else {
+            look.setTouchable(Touchable.disabled);
+            mutate.setTouchable(Touchable.disabled);
+        }
+        breed.setTouchable(selected.size() == 2 ? Touchable.enabled : Touchable.disabled);
+        kill.setTouchable(selected.size() < 1 ? Touchable.disabled : Touchable.enabled);
     }
 
     private void updatePositions() {
@@ -187,6 +214,7 @@ public class PlanetScreen extends InputAdapter implements Screen{
             mat.clear();
             mat.set(selectionMaterial);
         }
+        updateButtonTouchables();
     }
 
     public Planet getObject (int screenX, int screenY) {
