@@ -28,6 +28,7 @@ public class Planet{
     public static SpriteBatch spriteBatch;
     private Model planet;
     public ModelInstance instance;
+    public Material material;
     private Model clouds;
     private ModelInstance cloudsInstance;
     Texture planetTexture;
@@ -82,6 +83,9 @@ public class Planet{
                         bounds.getCenter(center);
                         bounds.getDimensions(dimensions);
                         radius = dimensions.len() / 2f;
+                        material = new Material();
+                        material.clear();
+                        material.set(instance.materials.first());
                         clouds = modelBuilder.createSphere(PLANET_SIZE * 1.025f, PLANET_SIZE * 1.025f, PLANET_SIZE * 1.025f, 25, 25,
                                 new Material(TextureAttribute.createDiffuse(cloudTexture)),
                                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates);

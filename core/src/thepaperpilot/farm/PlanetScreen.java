@@ -27,15 +27,14 @@ public class PlanetScreen extends InputAdapter implements Screen{
     private static final float COLUMNS = 4;
 
     ArrayList<Planet> planets = new ArrayList<Planet>();
+    ArrayList<Planet> selected = new ArrayList<Planet>();
     Stage ui;
     Label fps;
     ParticleEffect stars;
     private final PerspectiveCamera camera = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     private Vector3 position = new Vector3();
-    private int selected = -1;
-    private int selecting = -1;
+    private Planet selecting;
     private Material selectionMaterial;
-    private Material originalMaterial;
 
     public PlanetScreen() {
         Preferences prefs = Gdx.app.getPreferences("thepaperpilot.farm.planet1");
@@ -139,7 +138,6 @@ public class PlanetScreen extends InputAdapter implements Screen{
 
         selectionMaterial = new Material();
         selectionMaterial.set(ColorAttribute.createDiffuse(Color.ORANGE));
-        originalMaterial = new Material();
     }
 
     private void updatePositions() {
@@ -157,54 +155,51 @@ public class PlanetScreen extends InputAdapter implements Screen{
     @Override
     public boolean touchDown (int screenX, int screenY, int pointer, int button) {
         selecting = getObject(screenX, screenY);
-        return selecting >= 0;
+        return selecting != null;
     }
 
     @Override
     public boolean touchDragged (int screenX, int screenY, int pointer) {
-        return selecting >= 0;
+        // TODO make the planets scroll
+        return true;
     }
 
     @Override
     public boolean touchUp (int screenX, int screenY, int pointer, int button) {
-        if (selecting >= 0) {
+        if (selecting != null) {
             if (selecting == getObject(screenX, screenY))
                 setSelected(selecting);
-            selecting = -1;
+            selecting = null;
             return true;
         }
         return false;
     }
 
-    public void setSelected (int value) {
-        if (selected == value) return;
-        if (selected >= 0) {
-            Material mat = planets.get(selected).instance.materials.get(0);
+    public void setSelected (Planet value) {
+        if (selected.contains(value)) {
+            selected.remove(value);
+            Material mat = value.instance.materials.first();
             mat.clear();
-            mat.set(originalMaterial);
-        }
-        selected = value;
-        if (selected >= 0) {
-            Material mat = planets.get(selected).instance.materials.get(0);
-            originalMaterial.clear();
-            originalMaterial.set(mat);
+            mat.set(value.material);
+        } else {
+            selected.add(value);
+            Material mat = value.instance.materials.first();
             mat.clear();
             mat.set(selectionMaterial);
         }
     }
 
-    public int getObject (int screenX, int screenY) {
+    public Planet getObject (int screenX, int screenY) {
         Ray ray = camera.getPickRay(screenX, screenY);
-        int result = -1;
+        Planet result = null;
         float distance = -1;
-        for (int i = 0; i < planets.size(); ++i) {
-            final Planet instance = planets.get(i);
+        for (final Planet instance : planets) {
             instance.instance.transform.getTranslation(position);
             position.add(instance.center);
             float dist2 = ray.origin.dst2(position);
             if (distance >= 0f && dist2 > distance) continue;
             if (Intersector.intersectRaySphere(ray, position, instance.radius, null)) {
-                result = i;
+                result = instance;
                 distance = dist2;
             }
         }
