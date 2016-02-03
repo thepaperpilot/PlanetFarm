@@ -1,12 +1,15 @@
 package thepaperpilot.farm;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Preferences;
-import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.*;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
+import com.badlogic.gdx.graphics.g3d.Material;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -20,7 +23,7 @@ import com.badlogic.gdx.utils.viewport.StretchViewport;
 
 import java.util.ArrayList;
 
-public class PlanetScreen implements Screen{
+public class PlanetScreen extends InputAdapter implements Screen{
     private static final float COLUMNS = 4;
 
     ArrayList<Planet> planets = new ArrayList<Planet>();
@@ -28,6 +31,11 @@ public class PlanetScreen implements Screen{
     Label fps;
     ParticleEffect stars;
     private final PerspectiveCamera camera = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+    private Vector3 position = new Vector3();
+    private int selected = -1;
+    private int selecting = -1;
+    private Material selectionMaterial;
+    private Material originalMaterial;
 
     public PlanetScreen() {
         Preferences prefs = Gdx.app.getPreferences("thepaperpilot.farm.planet1");
@@ -128,6 +136,10 @@ public class PlanetScreen implements Screen{
         camera.near = 1f;
         camera.far = 300f;
         updatePositions();
+
+        selectionMaterial = new Material();
+        selectionMaterial.set(ColorAttribute.createDiffuse(Color.ORANGE));
+        originalMaterial = new Material();
     }
 
     private void updatePositions() {
@@ -140,6 +152,63 @@ public class PlanetScreen implements Screen{
         camera.position.set(Planet.PLANET_SIZE * (COLUMNS - 1), -Planet.PLANET_SIZE * (rows - 1), 8 * Planet.PLANET_SIZE);
         camera.lookAt(Planet.PLANET_SIZE * (COLUMNS - 1), -Planet.PLANET_SIZE * (rows - 1), 0);
         camera.update();
+    }
+
+    @Override
+    public boolean touchDown (int screenX, int screenY, int pointer, int button) {
+        selecting = getObject(screenX, screenY);
+        return selecting >= 0;
+    }
+
+    @Override
+    public boolean touchDragged (int screenX, int screenY, int pointer) {
+        return selecting >= 0;
+    }
+
+    @Override
+    public boolean touchUp (int screenX, int screenY, int pointer, int button) {
+        if (selecting >= 0) {
+            if (selecting == getObject(screenX, screenY))
+                setSelected(selecting);
+            selecting = -1;
+            return true;
+        }
+        return false;
+    }
+
+    public void setSelected (int value) {
+        if (selected == value) return;
+        if (selected >= 0) {
+            Material mat = planets.get(selected).instance.materials.get(0);
+            mat.clear();
+            mat.set(originalMaterial);
+        }
+        selected = value;
+        if (selected >= 0) {
+            Material mat = planets.get(selected).instance.materials.get(0);
+            originalMaterial.clear();
+            originalMaterial.set(mat);
+            mat.clear();
+            mat.set(selectionMaterial);
+        }
+    }
+
+    public int getObject (int screenX, int screenY) {
+        Ray ray = camera.getPickRay(screenX, screenY);
+        int result = -1;
+        float distance = -1;
+        for (int i = 0; i < planets.size(); ++i) {
+            final Planet instance = planets.get(i);
+            instance.instance.transform.getTranslation(position);
+            position.add(instance.center);
+            float dist2 = ray.origin.dst2(position);
+            if (distance >= 0f && dist2 > distance) continue;
+            if (Intersector.intersectRaySphere(ray, position, instance.radius, null)) {
+                result = i;
+                distance = dist2;
+            }
+        }
+        return result;
     }
 
     private static void save(Preferences prefs, Planet.PlanetPrototype prototype) {
@@ -184,7 +253,7 @@ public class PlanetScreen implements Screen{
 
     @Override
     public void show() {
-        Gdx.input.setInputProcessor(ui);
+        Gdx.input.setInputProcessor(new InputMultiplexer(ui, this));
     }
 
     @Override

@@ -12,6 +12,8 @@ import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.Align;
@@ -25,7 +27,7 @@ public class Planet{
     public static ModelBatch modelBatch;
     public static SpriteBatch spriteBatch;
     private Model planet;
-    private ModelInstance instance;
+    public ModelInstance instance;
     private Model clouds;
     private ModelInstance cloudsInstance;
     Texture planetTexture;
@@ -38,6 +40,12 @@ public class Planet{
     Label generating;
     float x;
     float y;
+
+    public final Vector3 center = new Vector3();
+    public final Vector3 dimensions = new Vector3();
+    public float radius;
+
+    private final static BoundingBox bounds = new BoundingBox();
 
     public void terminate() {
         running = false;
@@ -70,6 +78,10 @@ public class Planet{
                                 new Material(TextureAttribute.createDiffuse(planetTexture)),
                                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates);
                         instance = new ModelInstance(planet);
+                        instance.calculateBoundingBox(bounds);
+                        bounds.getCenter(center);
+                        bounds.getDimensions(dimensions);
+                        radius = dimensions.len() / 2f;
                         clouds = modelBuilder.createSphere(PLANET_SIZE * 1.025f, PLANET_SIZE * 1.025f, PLANET_SIZE * 1.025f, 25, 25,
                                 new Material(TextureAttribute.createDiffuse(cloudTexture)),
                                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates);
@@ -278,6 +290,7 @@ public class Planet{
         generating.setPosition(x, y, Align.center);
         this.x = x;
         this.y = y;
+        bounds.getCenter(center);
     }
 
     public static class PlanetPrototype {
