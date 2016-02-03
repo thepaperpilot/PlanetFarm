@@ -184,12 +184,6 @@ public class PlanetScreen extends InputAdapter implements Screen{
     }
 
     @Override
-    public boolean touchDragged (int screenX, int screenY, int pointer) {
-        // TODO make the planets scroll
-        return true;
-    }
-
-    @Override
     public boolean touchUp (int screenX, int screenY, int pointer, int button) {
         if (selecting != null) {
             if (selecting == getObject(screenX, screenY))
