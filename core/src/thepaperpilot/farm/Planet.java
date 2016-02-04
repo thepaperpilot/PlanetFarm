@@ -18,6 +18,8 @@ import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.Align;
 
+import java.nio.ByteBuffer;
+
 public class Planet{
     public static int TEXTURE_QUALITY = 64;
     public static int PLANET_SIZE = 10;
@@ -164,8 +166,9 @@ public class Planet{
             }
         }
 
+        // HTML needs this to be cast redundantly
         final Pixmap pixmap = new Pixmap(size, size, Pixmap.Format.RGBA8888);
-        pixmap.getPixels().put(data).position(0);
+        ((ByteBuffer) pixmap.getPixels()).put(data).position(0);
         return pixmap;
     }
 
