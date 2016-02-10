@@ -1,5 +1,6 @@
 package thepaperpilot.farm;
 
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -16,6 +17,7 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 public class Main extends Game implements Screen {
 	public static final Main instance = new Main();
 	public static final AssetManager manager = new AssetManager();
+	public static final float CAMERA_SPEED = 200;
 
 	public static Skin skin;
 

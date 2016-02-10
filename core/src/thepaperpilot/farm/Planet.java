@@ -66,38 +66,6 @@ public class Planet{
             public void run() {
                 simplexPlanet(TEXTURE_QUALITY, prototype.low, prototype.high, prototype.frequency, prototype.x1, prototype.y1, prototype.delta);
                 simplexClouds(TEXTURE_QUALITY, prototype.cloud, Color.CLEAR, prototype.cloudFrequency, prototype.cloudOpacity, prototype.cloudx1, prototype.cloudy1, prototype.clouddelta);
-
-                while (planetTexture == null || cloudTexture == null)
-                    try {
-                        Thread.sleep(1);
-                    } catch (InterruptedException ignored) {
-                    }
-
-                Gdx.app.postRunnable(new Runnable() {
-                    @Override
-                    public void run() {
-                        ModelBuilder modelBuilder = new ModelBuilder();
-                        planet = modelBuilder.createSphere(PLANET_SIZE, PLANET_SIZE, PLANET_SIZE, 2 * (int) Math.sqrt(TEXTURE_QUALITY), 2 * (int) Math.sqrt(TEXTURE_QUALITY),
-                                new Material(TextureAttribute.createDiffuse(planetTexture)),
-                                VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates);
-                        instance = new ModelInstance(planet);
-                        instance.calculateBoundingBox(bounds);
-                        bounds.getCenter(center);
-                        bounds.getDimensions(dimensions);
-                        radius = dimensions.len() / 2f;
-                        material = new Material();
-                        material.clear();
-                        material.set(instance.materials.first());
-                        clouds = modelBuilder.createSphere(PLANET_SIZE * 1.025f, PLANET_SIZE * 1.025f, PLANET_SIZE * 1.025f, 25, 25,
-                                new Material(TextureAttribute.createDiffuse(cloudTexture)),
-                                VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates);
-                        clouds.materials.first().set(new BlendingAttribute(GL20.GL_BLEND_SRC_ALPHA, GL20.GL_BLEND_SRC_ALPHA));
-                        cloudsInstance = new ModelInstance(clouds);
-
-                        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.2f, 0.2f, 0.2f, 1f));
-                        environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
-                    }
-                });
             }
         }).start();
     }
@@ -133,8 +101,7 @@ public class Planet{
     }
 
     private Pixmap generatePixmap(int size, Color low, Color high, int octave, float frequency, float modifier, float x1, float y1, float delta) {
-        byte[] data = new byte[size * size * 4];
-        int offset = 0;
+        final Pixmap pixmap = new Pixmap(size, size, Pixmap.Format.RGBA8888);
         for (int y = 0; y < size; y++) {
             for (int x = 0; x < size; x++) {
                 if (!running) return null;
@@ -152,27 +119,38 @@ public class Planet{
                 float gray = (float) (SimplexNoise.fbm(octave, sx, sy, sz, sw, frequency) / 2f + 0.5);
                 gray *= modifier;
                 float ogray = (1 - gray);
-                gray *= 255;
-                ogray *= 255;
 
                 //Set components of the current pixel
-                data[offset    ] = (byte) (low.r * gray + high.r * ogray);
-                data[offset + 1] = (byte) (low.g * gray + high.g * ogray);
-                data[offset + 2] = (byte) (low.b * gray + high.b * ogray);
-                data[offset + 3] = (byte) (low.a * gray + high.a * ogray);
-
-                //Move to the next pixel
-                offset += 4;
+                pixmap.drawPixel(x, y, new Color(low.r * gray + high.r * ogray, low.g * gray + high.g * ogray, low.b * gray + high.b * ogray, low.a * gray + high.a * ogray).toIntBits());
             }
         }
-
-        // HTML needs this to be cast redundantly
-        final Pixmap pixmap = new Pixmap(size, size, Pixmap.Format.RGBA8888);
-        ((ByteBuffer) pixmap.getPixels()).put(data).position(0);
         return pixmap;
     }
 
     public boolean render(float delta) {
+        if (instance == null && planetTexture != null && cloudTexture != null) {
+            ModelBuilder modelBuilder = new ModelBuilder();
+            planet = modelBuilder.createSphere(PLANET_SIZE, PLANET_SIZE, PLANET_SIZE, 2 * (int) Math.sqrt(TEXTURE_QUALITY), 2 * (int) Math.sqrt(TEXTURE_QUALITY),
+                    new Material(TextureAttribute.createDiffuse(planetTexture)),
+                    VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates);
+            instance = new ModelInstance(planet);
+            instance.calculateBoundingBox(bounds);
+            bounds.getCenter(center);
+            bounds.getDimensions(dimensions);
+            radius = dimensions.len() / 2f;
+            material = new Material();
+            material.clear();
+            material.set(instance.materials.first());
+            clouds = modelBuilder.createSphere(PLANET_SIZE * 1.025f, PLANET_SIZE * 1.025f, PLANET_SIZE * 1.025f, 25, 25,
+                    new Material(TextureAttribute.createDiffuse(cloudTexture)),
+                    VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates);
+            clouds.materials.first().set(new BlendingAttribute(GL20.GL_BLEND_SRC_ALPHA, GL20.GL_BLEND_SRC_ALPHA));
+            cloudsInstance = new ModelInstance(clouds);
+
+            environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.2f, 0.2f, 0.2f, 1f));
+            environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
+        }
+
         generating.draw(spriteBatch, 1);
 
         if (modelBatch == null || instance == null || cloudsInstance == null || planetTexture == null || cloudTexture == null || environment == null) return false;

@@ -39,6 +39,7 @@ public class PlanetScreen extends InputAdapter implements Screen{
     private Vector3 position = new Vector3();
     private Planet selecting;
     private Material selectionMaterial;
+    private Planet target;
 
     public PlanetScreen() {
         Preferences prefs = Gdx.app.getPreferences("thepaperpilot.farm.planet1");
@@ -80,7 +81,8 @@ public class PlanetScreen extends InputAdapter implements Screen{
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 if (look.isDisabled()) return;
-                // TODO look at planets
+                target = target == null ? selected.get(0) : null;
+                updateButtonTouchables();
             }
         });
         table.add(look).expandX().fill().uniform();
@@ -159,7 +161,7 @@ public class PlanetScreen extends InputAdapter implements Screen{
     }
 
     private void updateButtonTouchables() {
-        look.setDisabled(selected.size() != 1);
+        look.setDisabled(selected.size() != 1 && target == null);
         mutate.setDisabled(selected.size() != 1);
         breed.setDisabled(selected.size() != 2);
         kill.setDisabled(selected.size() < 0);
@@ -174,6 +176,7 @@ public class PlanetScreen extends InputAdapter implements Screen{
         }
         camera.position.set(Planet.PLANET_SIZE * (COLUMNS - 1), -Planet.PLANET_SIZE * (rows - 1), 8 * Planet.PLANET_SIZE);
         camera.lookAt(Planet.PLANET_SIZE * (COLUMNS - 1), -Planet.PLANET_SIZE * (rows - 1), 0);
+        camera.position.set(new Vector3(target == null ? Planet.PLANET_SIZE * (COLUMNS - 1) : target.x, target == null ? -Planet.PLANET_SIZE * (MathUtils.ceil(planets.size() / COLUMNS) - 1) : target.y, (target == null ? 8 : 2) * Planet.PLANET_SIZE));
         camera.update();
     }
 
@@ -274,6 +277,15 @@ public class PlanetScreen extends InputAdapter implements Screen{
     @Override
     public void render(float delta) {
         fps.setText("fps: " + Gdx.graphics.getFramesPerSecond());
+
+        Vector3 targetPos = new Vector3(target == null ? Planet.PLANET_SIZE * (COLUMNS - 1) : target.x, target == null ? -Planet.PLANET_SIZE * (MathUtils.ceil(planets.size() / COLUMNS) - 1) : target.y, (target == null ? 8 : 2) * Planet.PLANET_SIZE);
+        if (camera.position != targetPos) {
+            if (camera.position.dst(targetPos) < Main.CAMERA_SPEED * delta) {
+                camera.position.set(targetPos);
+            } else camera.translate(targetPos.sub(camera.position).nor().scl(Main.CAMERA_SPEED * delta));
+            camera.update();
+        }
+
         Planet.spriteBatch.setProjectionMatrix(camera.combined);
         Planet.spriteBatch.begin();
         Planet.modelBatch.begin(camera);
@@ -283,6 +295,7 @@ public class PlanetScreen extends InputAdapter implements Screen{
         }
         Planet.spriteBatch.end();
         Planet.modelBatch.end();
+
         ui.act();
         ui.draw();
     }
