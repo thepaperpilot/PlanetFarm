@@ -217,6 +217,7 @@ public class PlanetScreen extends InputAdapter implements Screen{
         Planet result = null;
         float distance = -1;
         for (final Planet instance : planets) {
+            if (instance.instance == null) continue;
             instance.instance.transform.getTranslation(position);
             position.add(instance.center);
             float dist2 = ray.origin.dst2(position);
